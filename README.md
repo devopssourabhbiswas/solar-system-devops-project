@@ -1,8 +1,8 @@
-# solar-system-devops-project
+# Solar-system-devops-project
 
 Solar System Devops project with CI Jenkins &amp; CD ArgoCD. Deployment on EKS using Helm. IaC using Terraform. Monitoring using Promethes. Grafana. Observibitly &amp; logs uisng EFK stack.
 
-About Project: - A simple HTML + MongoDB + NodeJS project to display Solar System and it's planets.
+## About Project: - A simple HTML + MongoDB + NodeJS project to display Solar System and it's planets.
 
 1. Local Development, Containerization & Push to Docker Hub
     - Tools: Node.js, MongoDB, Html, Docker 
