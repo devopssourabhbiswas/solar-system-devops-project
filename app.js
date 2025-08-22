@@ -49,7 +49,7 @@ var planetModel = mongoose.model('planets', dataSchema);
       name: "Mercury",
       id: 1,
       description: "The closest planet to the Sun",
-      image: "images/mercury.jpg",
+      image: "images/mercury.png",
       velocity: "47.87 km/s",
       distance: "57.91 million km"
   }, function(err) {
@@ -64,7 +64,7 @@ planetModel.create({
       name: "Venus",
       id: 2,
       description: "The second planet from the Sun",
-      image: "images/venus.jpg",
+      image: "images/venus.png",
       velocity: "35.02 km/s",
       distance: "108.2 million km"
   }, function(err) {
@@ -79,7 +79,7 @@ planetModel.create({
       name: "Earth",
       id: 3,
       description: "Our home planet, mother Earth, the third planet from the Sun",
-      image: "images/earth.jpg",
+      image: "images/earth.png",
       velocity: "29.78 km/s",
       distance: "149.6 million km"
   }, function(err) {
@@ -94,7 +94,7 @@ planetModel.create({
       name: "Mars",
       id: 4,
       description: "The fourth planet from the Sun, known as the Red Planet",
-      image: "images/mars.jpg",
+      image: "images/mars.png",
       velocity: "24.07 km/s",
       distance: "227.9 million km"
   }, function(err) {
@@ -109,7 +109,7 @@ planetModel.create({
       name: "Jupiter",
       id: 5,
       description: "The fifth planet from the Sun and the largest in the Solar System",
-      image: "images/jupiter.jpg",
+      image: "images/jupiter.png",
       velocity: "13.07 km/s",
       distance: "778.5 million km"
   }, function(err) {
@@ -124,7 +124,7 @@ planetModel.create({
       name: "Saturn",
       id: 6,
       description: "The sixth planet from the Sun, known for its prominent ring system",
-      image: "images/saturn.jpg",
+      image: "images/saturn.png",
       velocity: "9.69 km/s",
       distance: "1.434 billion km"
   }, function(err) {
@@ -139,7 +139,7 @@ planetModel.create({
       name: "Uranus",
       id: 7,
       description: "The seventh planet from the Sun, known for its blue color and unique tilt",
-      image: "images/uranus.jpg",
+      image: "images/uranus.png",
       velocity: "6.81 km/s",
       distance: "2.871 billion km"
   }, function(err) {
@@ -154,7 +154,7 @@ planetModel.create({
       name: "Neptune",
       id: 8,
       description: "The eighth planet from the Sun, known for its deep blue color",
-      image: "images/neptune.jpg",
+      image: "images/neptune.png",
       velocity: "5.43 km/s",
       distance: "4.495 billion km"
   }, function(err) {
