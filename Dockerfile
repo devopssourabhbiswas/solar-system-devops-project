@@ -1,7 +1,7 @@
 #1st Stage to build the application
 
 # Set Base image to build the application
-FROM node:18-alpine3.22 as builder
+FROM node:18-alpine3.17 AS builder
 
 # Set working directory
 WORKDIR /src/app
@@ -18,7 +18,7 @@ RUN npm ci
 COPY . .
 
 #2nd Stage to run the application
-FROM node:18-alpine3.22 as runner
+FROM node:18-alpine3.17 AS runner
 
 # Set working directory
 WORKDIR /src/app
