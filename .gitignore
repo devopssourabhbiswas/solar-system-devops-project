@@ -1,4 +1,5 @@
 node_modules
+.env
 solar-system.png
 .nyc_output
 .talismanrc
