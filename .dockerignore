@@ -16,6 +16,7 @@ README-secret.md
 .github/
 # nodejs releated files
 node_modules
+images
 solar-system.png
 .nyc_output
 .talismanrc
