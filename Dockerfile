@@ -9,8 +9,11 @@ WORKDIR /src/app
 # Copy package-lock.json to the working directory
 COPY package*.json /src/app/
 
-# It’s faster and ensures reproducible builds compare to manual npm install
+# It’s faster and ensures reproducible builds compare to manual npm install good for dev & testing stages 
+
 RUN npm ci 
+
+#use RUN npm install --production for final production image.
 
 # note in this project we are not building the application like we usually do with a 'build' step to create a production-ready artifact
 
@@ -40,6 +43,12 @@ ENV MONGO_PASSWORD=passwordPlaceholder
 
 # Application binds to port 3000
 EXPOSE 3000
+
+# Run app as a non-root user following best security practices
+RUN addgroup --system app && adduser --system --ingroup app app
+
+# Switch to the non-root user
+USER app
 
 # Start the application
 CMD ["npm", "start"]
