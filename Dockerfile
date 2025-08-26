@@ -13,7 +13,7 @@ COPY package*.json /src/app/
 
 RUN npm ci 
 
-#use RUN npm install --production for final production image.
+#use RUN npm install --production for final production image. Slower to build low reproducibility no dev dependencies.
 
 # note in this project we are not building the application like we usually do with a 'build' step to create a production-ready artifact
 
