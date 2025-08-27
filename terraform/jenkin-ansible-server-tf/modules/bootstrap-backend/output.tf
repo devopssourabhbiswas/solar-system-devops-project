@@ -2,6 +2,6 @@ output "state_bucket_name" {
   value = aws_s3_bucket.tf-state-lock.id
 }
 
-output "lock_table_name" {
-  value = aws_dynamodb_table.tf_lock.name
-}
+#output "lock_table_name" {
+  #value = aws_dynamodb_table.tf_lock.name
+#}
