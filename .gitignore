@@ -8,3 +8,4 @@ test-results.xml
 #This tells Git to ignore any .terraform directory inside the terraform/ folder and its subdirectories (like terraform/modules/vpc/.terraform/ or terraform/jenkins-server/.terraform/).
 terraform/**/.terraform/
 terraform/**/.terraform.lock.hcl
+terraform/**/terraform.tfstate
