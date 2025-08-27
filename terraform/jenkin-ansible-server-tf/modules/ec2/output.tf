@@ -1,4 +1,7 @@
 output "instance_ids" {
-  description = "The IDs of all the EC2 instances"
-  value       = aws_instance.ec2[*].id
+  value = aws_instance.ec2[*].id
+}
+
+output "public_ips" {
+  value = aws_instance.ec2[*].public_ip
 }

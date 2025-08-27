@@ -1,9 +1,9 @@
-output "jenkins_instance_id" {
-  value = module.ec2.instance_id
+output "jenkins_instance_ids" {
+  value = module.ec2.instance_ids
 }
 
-output "jenkins_public_ip" {
-  value = module.ec2.public_ip
+output "jenkins_public_ips" {
+  value = module.ec2.public_ips
 }
 
 output "security_group_id" {

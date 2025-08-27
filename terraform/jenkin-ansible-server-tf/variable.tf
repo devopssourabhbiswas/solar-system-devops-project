@@ -19,8 +19,8 @@ variable "key_name" {
 }
 
 variable "allowed_ports" {
-  type        = list(number)
-  description = "List of allowed ports for security group"
+  type        = map(number)
+  description = "Map of allowed ports for security group"
 }
 
 variable "environment" {
@@ -37,4 +37,23 @@ variable "az_name" {
   type        = string
   description = "Availability zone for the EC2 instance"
   default     = "ap-south-1b"
+}
+
+variable "root_volume_size" {
+  type    = number
+  default = 30
+}
+
+variable "root_volume_type" {
+  type    = string
+}
+
+variable "public_subnet_cidr" {
+  type        = string
+  description = "CIDR block for the public subnet"
+}
+variable "name_prefix" {
+  type        = string
+  description = "Prefix for naming resources"
+  default     = "jenkins-main"
 }
