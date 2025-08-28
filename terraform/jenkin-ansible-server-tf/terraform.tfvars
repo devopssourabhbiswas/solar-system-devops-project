@@ -1,5 +1,5 @@
 vpc_cidr_block = "10.0.0.0/16"
-ami_id         = "ami-0c4a668b99e68bbde"
+ami_id         = "ami-02d26659fd82cf299" # Ubuntu 24.04 LTS - ap-south-1
 instance_type  = "t3.small"
 key_name       = "jenkins-server-solar-sys-key"
 allowed_ports = {

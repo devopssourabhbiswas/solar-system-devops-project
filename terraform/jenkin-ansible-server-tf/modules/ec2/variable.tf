@@ -5,51 +5,51 @@ variable "instance_count" {
 }
 
 variable "ami_id" {
-  type        = string
+  type = string
 }
 
 variable "instance_type" {
-  type        = string
+  type = string
 }
 
 variable "key_name" {
-  type        = string
+  type = string
 }
 
 variable "subnet_id" {
-  type        = string
+  type = string
 }
 
 variable "security_group_id" {
-  type        = string
+  type = string
 }
 
 variable "name_prefix" {
-  type        = string
+  type = string
 }
 
 variable "environment" {
-  type        = string
+  type = string
 }
 
 variable "root_volume_size" {
   type    = number
   default = 30
-  
-validation {
+
+  validation {
     condition     = var.root_volume_size >= 20
     error_message = "Root volume size must be at least 20 GiB."
   }
-
-
 }
 
 variable "root_volume_type" {
   type    = string
   default = "gp3"
 
-   validation {
+  validation {
     condition     = var.root_volume_type == "gp3"
     error_message = "Only 'gp3' volume type is allowed for root EBS volumes."
   }
 }
+
+variable "user_data_script" { type = string }
