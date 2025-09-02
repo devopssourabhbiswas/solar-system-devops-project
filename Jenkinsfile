@@ -3,8 +3,8 @@ pipeline {
     stages {
         stage('VM Node Version') {
             steps {
-                 sh '''
-      export PATH="$HOME/.fnm:$PATH"
+         sh '''
+      export PATH="$HOME/.fnm/bin:$PATH"
       eval "$(fnm env)"
       fnm use 22.19.0
       node -v
