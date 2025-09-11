@@ -40,21 +40,22 @@ pipeline {
 
                 stage('OWASP Dependency Check with Quality Gates') {
                     steps {
-                        // Run OWASP Dependency Check
-                        dependencyCheck additionalArguments: '''
-                --scan ./
-                --out ./
-                --format \'ALL\'
-                --prettyPrint
-                --nvdApiKey ${NVD_API_KEY}
-            ''', odcInstallation: 'OWASP DEPENDENCY CHECK 12.0.0'
-                        // Publish Dependency Check Report with Quality Gates Critical = 1 means 99%
-                        // Set stopBuild to true to fail the build if critical vulnerabilities are found
-                        dependencyCheckPublisher pattern: 'dependency-check-report.xml',
-                    stopBuild: true,
-                    unstableTotalCritical: 1
-                        // Publish HTML Report
-                        publishHTML(
+                        withCredentials([string(credentialsId: 'NVD_API_KEY', variable: 'NVD_KEY')]) {
+                            // Run OWASP Dependency Check
+                            dependencyCheck additionalArguments: '''
+                         --scan ./
+                         --out ./
+                         --format \'ALL\'
+                         --prettyPrint
+                         --nvdApiKey ${NVD_KEY}
+                         ''', odcInstallation: 'OWASP DEPENDENCY CHECK 12.0.0'
+                            // Publish Dependency Check Report with Quality Gates Critical = 1 means 99%
+                            // Set stopBuild to true to fail the build if critical vulnerabilities are found
+                            dependencyCheckPublisher pattern: 'dependency-check-report.xml',
+                         stopBuild: true,
+                         unstableTotalCritical: 1
+                            // Publish HTML Report
+                            publishHTML(
                         [allowMissing: true,
                         alwaysLinkToLastBuild: true,
                         icon: '',
@@ -65,25 +66,26 @@ pipeline {
                         reportTitles: '',
                         useWrapperFileDirectly: true])
 
-                        // JUnit Test Report
-                        junit allowEmptyResults: true,
+                            // JUnit Test Report
+                            junit allowEmptyResults: true,
                         keepProperties: true,
                         stdioRetention: 'ALL',
                         testResults: 'OWASP-dependency-check-junit.xml'
+                        }
                     }
                 }
             }
         }
-    }
-    post {
-        always {
-            echo 'This will always run after the stages.'
-        }
-        success {
-            echo 'This will run only if the pipeline succeeds.'
-        }
-        failure {
-            echo 'This will run only if the pipeline fails.'
+        post {
+            always {
+                echo 'This will always run after the stages.'
+            }
+            success {
+                echo 'This will run only if the pipeline succeeds.'
+            }
+            failure {
+                echo 'This will run only if the pipeline fails.'
+            }
         }
     }
 }
