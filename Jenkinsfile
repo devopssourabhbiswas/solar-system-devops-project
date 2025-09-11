@@ -36,7 +36,7 @@ pipeline {
                             snykInstallation: 'snyk latest',
                             snykTokenId: 'devopsourabhbiswas-organization-token',
                             failOnIssues: true,
-                            monitorOnly: false
+                            severityThreshold: 'CRITICAL',     
                         )
                     }
                 }
