@@ -5,6 +5,10 @@ pipeline {
         snyk 'snyk latest'
     }
 
+    environment {
+        NVD_KEY = credentials('NVD_API_KEY')
+    }
+
     stages {
         stage('VM Node Version on Agent') {
             steps {
@@ -40,7 +44,6 @@ pipeline {
 
                 stage('OWASP Dependency Check with Quality Gates') {
                     steps {
-                        withCredentials([string(credentialsId: 'NVD_API_KEY', variable: 'NVD_KEY')]) {
                             // Run OWASP Dependency Check
                             dependencyCheck additionalArguments: '''
                          --scan ./
@@ -56,22 +59,21 @@ pipeline {
                          unstableTotalCritical: 1
                             // Publish HTML Report
                             publishHTML(
-                        [allowMissing: true,
-                        alwaysLinkToLastBuild: true,
-                        icon: '',
-                        keepAll: true,
-                        reportDir: './',
-                        reportFiles: 'index.html',
-                        reportName: 'OWASP Dependency Check HTML Report',
-                        reportTitles: '',
-                        useWrapperFileDirectly: true])
+                         [allowMissing: true,
+                         alwaysLinkToLastBuild: true,
+                         icon: '',
+                         keepAll: true,
+                         reportDir: './',
+                         reportFiles: 'index.html',
+                         reportName: 'OWASP Dependency Check HTML Report',
+                         reportTitles: '',
+                         useWrapperFileDirectly: true])
 
                             // JUnit Test Report
                             junit allowEmptyResults: true,
-                        keepProperties: true,
-                        stdioRetention: 'ALL',
-                        testResults: 'OWASP-dependency-check-junit.xml'
-                        }
+                         keepProperties: true,
+                         stdioRetention: 'ALL',
+                         testResults: 'OWASP-dependency-check-junit.xml'
                     }
                 }
             }
