@@ -34,9 +34,7 @@ pipeline {
                         echo 'Testing...'
                         snykSecurity(
                             snykInstallation: 'snyk latest',
-                            snykTokenId: 'devopsourabhbiswas-organization-token',
-                            failOnIssues: true,
-                            severityThreshold: 'CRITICAL',     
+                            snykTokenId: 'devopsourabhbiswas-organization-token',  
                         )
                     }
                 }
