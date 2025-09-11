@@ -1,30 +1,69 @@
 pipeline {
     agent any
     tools {
-  nodejs 'NodeJS 22.19.0'
-}
+        nodejs 'NodeJS 22.19.0'
+    }
 
     stages {
-        stage('VM Node Version') {
+        stage('VM Node Version on Agent') {
             steps {
-         sh '''
-      node -v
-    '''
+                sh 'node -v'
             }
         }
-        stage('Build') {
+
+        stage('Install Dependencies') {
             steps {
-                echo 'Building...'
+                sh 'npm ci'
             }
         }
-        stage('Test') {
-            steps {
-                echo 'Testing...'
-            }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'Deploying...'
+
+        stage('Dependency Scanning') {
+            parallel {
+                stage('Snyk Security Scan') {
+                    steps {
+                        sh 'snyk test'
+                    }
+                }
+
+                stage('NPM Dependency Audit') {
+                    steps {
+                        sh 'npm audit --audit-level=critical; echo $?'
+                    }
+                }
+
+                stage('OWASP Dependency Check with Quality Gates') {
+                    steps {
+                        // Run OWASP Dependency Check
+                        dependencyCheck additionalArguments: '''
+                --scan ./
+                --out ./
+                --format \'ALL\'
+                --prettyPrint
+            ''', odcInstallation: 'OWASP DEPENDENCY CHECK 12.0.0'
+                        // Publish Dependency Check Report with Quality Gates Critical = 1 means 99%
+                        // Set stopBuild to true to fail the build if critical vulnerabilities are found
+                        dependencyCheckPublisher pattern: 'dependency-check-report.xml',
+                    stopBuild: true,
+                    unstableTotalCritical: 1
+                        // Publish HTML Report
+                        publishHTML(
+                        [allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        icon: '',
+                        keepAll: true,
+                        reportDir: './',
+                        reportFiles: 'index.html',
+                        reportName: 'OWASP Dependency Check HTML Report',
+                        reportTitles: '',
+                        useWrapperFileDirectly: true])
+
+                        // JUnit Test Report
+                        junit allowEmptyResults: true,
+                        keepProperties: true,
+                        stdioRetention: 'ALL',
+                        testResults: 'OWASP-dependency-check-junit.xml'
+                    }
+                }
             }
         }
     }
