@@ -11,7 +11,6 @@ pipeline {
                 sh 'node -v'
                 sh 'npm install -g npm@latest'
                 sh 'npm -v'
-                sh 'npm install -g snyk@latest'
             }
         }
 
@@ -23,18 +22,12 @@ pipeline {
 
         stage('Dependency Scanning') {
             parallel {
-                stage('Snyk Security Scan') {
-                    steps {
-                        sh 'snyk test'
-                    }
-                }
-
                 stage('Snyk Scan Test') {
                     steps {
                         echo 'Testing...'
                         snykSecurity(
                             snykInstallation: 'snyk latest',
-                            snykTokenId: 'devopsourabhbiswas-organization-token',  
+                            snykTokenId: 'devopsourabhbiswas-organization-token',
                         )
                     }
                 }
