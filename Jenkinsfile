@@ -2,12 +2,16 @@ pipeline {
     agent any
     tools {
         nodejs 'NodeJS 22.19.0'
+        snyk 'snyk latest'
     }
 
     stages {
         stage('VM Node Version on Agent') {
             steps {
                 sh 'node -v'
+                sh 'npm install -g npm@latest'
+                sh 'npm -v'
+                sh 'npm install -g snyk@latest'
             }
         }
 
@@ -22,6 +26,18 @@ pipeline {
                 stage('Snyk Security Scan') {
                     steps {
                         sh 'snyk test'
+                    }
+                }
+
+                stage('Snyk Scan Test') {
+                    steps {
+                        echo 'Testing...'
+                        snykSecurity(
+                            snykInstallation: 'snyk latest',
+                            snykTokenId: 'devopsourabhbiswas-organization-token',
+                            failOnIssues: true,
+                            monitorOnly: false
+                        )
                     }
                 }
 
