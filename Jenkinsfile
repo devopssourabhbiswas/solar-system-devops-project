@@ -46,6 +46,7 @@ pipeline {
                 --out ./
                 --format \'ALL\'
                 --prettyPrint
+                --nvdApiKey ${NVD_API_KEY}
             ''', odcInstallation: 'OWASP DEPENDENCY CHECK 12.0.0'
                         // Publish Dependency Check Report with Quality Gates Critical = 1 means 99%
                         // Set stopBuild to true to fail the build if critical vulnerabilities are found
