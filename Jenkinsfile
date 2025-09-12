@@ -55,7 +55,8 @@ pipeline {
                             --format ALL
                             --prettyPrint
                             --nvdApiKey ${NVD_KEY}
-                        """, odcInstallation: 'OWASP DEPENDENCY CHECK 12.0.0'
+                            --data ./dependency-check-data
+                        """, odcInstallation: '5.6.1', stopBuild: true
                             // Publish Dependency Check Report with Quality Gates Critical = 1 means 99%
                             // Set stopBuild to true to fail the build if critical vulnerabilities are found
                         dependencyCheckPublisher(
