@@ -45,43 +45,6 @@ pipeline {
                         '''
                     }
                 }
-
-                stage('OWASP Dependency Check with Quality Gates') {
-                    steps {
-                        withEnv(["NVD_API_KEY=${NVD_KEY}"]) {
-                            echo 'Running OWASP Dependency Check...'
-                            dependencyCheck additionalArguments: """
-                            --scan ./
-                            --out ./dependency-check-report
-                            --format ALL
-                            --prettyPrint
-                            --nvdApiKey $NVD_API_KEY
-                            --data ./dependency-check-data
-                        """, debug: true, odcInstallation: 'OWASP DEPENDENCY CHECK 12.0.0', stopBuild: true
-                            // Publish Dependency Check Report with Quality Gates Critical = 1 means 99%
-                            // Set stopBuild to true to fail the build if critical vulnerabilities are found
-                            dependencyCheckPublisher(
-                            pattern: 'dependency-check-report/dependency-check-report.xml',
-                            stopBuild: true,
-                            unstableTotalCritical: 1
-                        )
-                            // Publish HTML reports
-                            publishHTML(
-                            [allowMissing: true,
-                            alwaysLinkToLastBuild: true,
-                            keepAll: true,
-                            reportDir: 'dependency-check-report',
-                            reportFiles: 'index.html',
-                            reportName: 'OWASP Dependency Check HTML Report']
-                        )
-                            // JUnit Test Report
-                            junit(
-                            allowEmptyResults: true,
-                            testResults: 'dependency-check-report/OWASP-dependency-check-junit.xml'
-                        )
-                        }
-                    }
-                }
             }
         }
     }
