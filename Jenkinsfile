@@ -70,7 +70,7 @@ pipeline {
             steps {
                 echo 'Running Git Leaks Scan...'
                 sh 'gitleaks version'
-                sh 'gitleaks detect --source . --no-banner --report=gitleaks-report.json'
+                sh 'gitleaks detect --source . --no-banner --report-path=gitleaks-report.json'
                 echo 'Git Leaks Scan completed.'
             }
         }
