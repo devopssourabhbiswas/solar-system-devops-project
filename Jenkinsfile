@@ -66,21 +66,11 @@ pipeline {
             }
         }
 
-        stage('Install Gitleaks') {
-            steps {
-                echo 'Installing Gitleaks...'
-                sh '''
-                  npm install -g gitleaks
-                  export PATH=$PATH:$(npm bin -g)
-                  gitleaks version
-                   '''
-                }
-        }
-
         stage('Git Leaks Scan') {
             steps {
                 echo 'Running Git Leaks Scan...'
-                sh 'npx gitleaks detect --source . --no-banner --report=gitleaks-report.json'
+                sh 'gitleaks version'
+                sh 'gitleaks detect --source . --no-banner --report=gitleaks-report.json'
                 echo 'Git Leaks Scan completed.'
             }
         }
