@@ -21,14 +21,6 @@ pipeline {
             }
         }
 
-        stage('Install Gitleaks') {
-            steps {
-                echo 'Installing Gitleaks...'
-                sh 'npx gitleaks version'
-                sh 'gitleaks version || gitleaks -v'
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
                 sh 'npm ci'
@@ -77,6 +69,7 @@ pipeline {
         stage('Git Leaks Scan') {
             steps {
                 echo 'Running Git Leaks Scan...'
+                sh 'npx gitleaks version'
                 sh 'npx gitleaks detect --source . --no-banner --report=gitleaks-report.json'
                 echo 'Git Leaks Scan completed.'
             }
