@@ -19,7 +19,7 @@ pipeline {
                 sh 'npm install -g npm@latest'
                 sh 'npm -v'
                 sh 'npm install -g gitleaks'
-                sh 'gitleaks version'
+                sh 'gitleaks -v'
             }
         }
 
