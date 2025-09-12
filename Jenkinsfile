@@ -18,8 +18,14 @@ pipeline {
                 sh 'node -v'
                 sh 'npm install -g npm@latest'
                 sh 'npm -v'
+            }
+        }
+
+        stage('Install Gitleaks') {
+            steps {
+                echo 'Installing Gitleaks...'
                 sh 'npm install -g gitleaks'
-                sh 'gitleaks -v'
+                sh 'gitleaks version || gitleaks -v'
             }
         }
 
