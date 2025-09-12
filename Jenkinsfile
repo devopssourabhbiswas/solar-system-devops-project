@@ -65,6 +65,7 @@ pipeline {
                 sh 'npm test'
             }
         }
+
         stage('Install Gitleaks') {
             steps {
                 echo 'Installing Gitleaks...'
@@ -79,7 +80,6 @@ pipeline {
         stage('Git Leaks Scan') {
             steps {
                 echo 'Running Git Leaks Scan...'
-                sh 'npx gitleaks version'
                 sh 'npx gitleaks detect --source . --no-banner --report=gitleaks-report.json'
                 echo 'Git Leaks Scan completed.'
             }
