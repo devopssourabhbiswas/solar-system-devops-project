@@ -65,6 +65,16 @@ pipeline {
                 sh 'npm test'
             }
         }
+        stage('Install Gitleaks') {
+            steps {
+                echo 'Installing Gitleaks...'
+                sh '''
+                  npm install -g gitleaks
+                  export PATH=$PATH:$(npm bin -g)
+                  gitleaks version
+                   '''
+                }
+        }
 
         stage('Git Leaks Scan') {
             steps {
