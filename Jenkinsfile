@@ -24,7 +24,7 @@ pipeline {
         stage('Install Gitleaks') {
             steps {
                 echo 'Installing Gitleaks...'
-                sh 'npm install -g gitleaks'
+                sh 'npx gitleaks version'
                 sh 'gitleaks version || gitleaks -v'
             }
         }
