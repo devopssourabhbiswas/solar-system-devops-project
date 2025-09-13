@@ -79,7 +79,7 @@ pipeline {
 
         stage('SAST-Analysis-SonarQube') {
             steps {
-                    withSonarQubeEnv(credentialsId: 'SonarQube-Token') {
+                    withSonarQubeEnv('sonar-qube-server') {
                         sh '''
                         $SONAR_SCANNER_HOME/bin/sonar-scanner \
                         -Dsonar.projectKey=Solar-System-Project \
