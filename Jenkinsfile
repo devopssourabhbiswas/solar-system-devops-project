@@ -69,8 +69,6 @@ pipeline {
         }
 
         stage('Git Leaks Scan') {
-            //Make sure the gitleaks is installed on the Jenkins Controller machine.
-            //sudo apt-get install gitleaks - on Ubuntu
             steps {
                 echo 'Running Git Leaks Scan...'
                 sh 'gitleaks version'
@@ -78,21 +76,26 @@ pipeline {
                 echo 'Git Leaks Scan completed.'
             }
         }
-    }
 
-    stage('SAST-Analysis-SonarQube') {
-        steps {
-            timeout(time: 60, unit: 'SECONDS') {
-                withSonarQubeEnv(credentialsId: 'SonarQube-Token') {
-                    sh '''
-                    $SONAR_SCANNER_HOME/bin/sonar-scanner \
-                    -Dsonar.projectKey=Solar-System-Project \
-                    -Dsonar.sources=app.js \
-                    -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info
-                '''
+        stage('SAST-Analysis-SonarQube') {
+            steps {
+                    withSonarQubeEnv(credentialsId: 'SonarQube-Token') {
+                        sh '''
+                        $SONAR_SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectKey=Solar-System-Project \
+                        -Dsonar.sources=app.js \
+                        -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info
+                        '''
+                    }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
-            waitForQualityGate abortPipeline: true
         }
     }
 
