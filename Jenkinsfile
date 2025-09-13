@@ -10,6 +10,8 @@ pipeline {
         MONGO_URI = credentials('Solar-mongoatlas-db-uri')
         MONGO_USERNAME = credentials('Solar-mongoatlas-db-username')
         MONGO_PASSWORD = credentials('Solar-mongoatlas-db-password')
+        SONAR_TOKEN = credentials('SonarQube-Token')
+        SONAR_SCANNER_HOME = tool 'sonarqube-scanner-7.2.0'
     }
 
     stages {
@@ -67,6 +69,8 @@ pipeline {
         }
 
         stage('Git Leaks Scan') {
+            //Make sure the gitleaks is installed on the Jenkins Controller machine.
+            //sudo apt-get install gitleaks - on Ubuntu
             steps {
                 echo 'Running Git Leaks Scan...'
                 sh 'gitleaks version'
@@ -75,6 +79,23 @@ pipeline {
             }
         }
     }
+
+        stage('SAST SonarQube Analysis') {
+            steps {
+                timeout(time: 60, unit: 'SECONDS') {
+                echo 'Running SonarQube Analysis...'
+                sh '''
+                    sonar-scanner \
+                    -Dsonar.projectKey=solar-system-devops-project \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=http://homely-dorsey-unnoticeably.ngrok-free.app:9000 \
+                    -Dsonar.login=${SONAR_TOKEN} \
+                    -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                    '''
+                }
+            }
+        waitForQualityGate abortPipeline: true
+        }
 
     post {
         always {
