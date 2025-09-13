@@ -80,22 +80,21 @@ pipeline {
         }
     }
 
-        stage('SAST SonarQube Analysis') {
-            steps {
-                timeout(time: 60, unit: 'SECONDS') {
-                echo 'Running SonarQube Analysis...'
-                sh '''
-                    sonar-scanner \
-                    -Dsonar.projectKey=solar-system-devops-project \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=http://homely-dorsey-unnoticeably.ngrok-free.app:9000 \
-                    -Dsonar.login=${SONAR_TOKEN} \
-                    -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-                    '''
+    stage('SAST-Analysis-SonarQube') {
+        steps {
+            timeout(time: 60, unit: 'SECONDS') {
+                withSonarQubeEnv(credentialsId: 'SonarQube-Token') {
+                    sh '''
+                    $SONAR_SCANNER_HOME/bin/sonar-scanner \
+                    -Dsonar.projectKey=Solar-System-Project \
+                    -Dsonar.sources=app.js \
+                    -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info
+                '''
                 }
             }
-        waitForQualityGate abortPipeline: true
+            waitForQualityGate abortPipeline: true
         }
+    }
 
     post {
         always {
