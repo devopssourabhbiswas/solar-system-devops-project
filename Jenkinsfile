@@ -14,7 +14,7 @@ def color = buildStatus == 'SUCCESS'  ? '#47ec05' :
     // Construct message
     def msg = "${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}\n${env.BUILD_URL}"
     def msg2 = "Check the reports at: https://s3.console.aws.amazon.com/s3/buckets/solar-system-jenkins-reports-bucket-devops-sb/jenkins-${BUILD_ID}/"
-    slackSend color: color, message: msg + msg2
+    slackSend color: color, message: msg + "\n\n" + msg2
 }
 
 pipeline {
@@ -135,7 +135,6 @@ pipeline {
                 sh '''
                   trivy image --severity CRITICAL --exit-code 1 --no-progress \
                   --format json -o trivy-image-critical.json \
-                  String shortCommit = env.GIT_COMMIT.take(7)   // shorten commit SHA
                   solar-system-app:${BRANCH_NAME}-${shortCommit}
                 '''
             }
