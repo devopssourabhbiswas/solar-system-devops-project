@@ -3,10 +3,12 @@ def slackNotification(String buildStatus = 'STARTED') {
 
 
     // Map status to color
-    def color = buildStatus == 'SUCCESS'  ? '#47ec05' :
-                buildStatus == 'UNSTABLE' ? '#d5ee0d' :
-                buildStatus == 'FAILURE'  ? '#ec2805' :
-                buildStatus == 'ABORTED'  ? '#808080' :
+def color = buildStatus == 'SUCCESS'  ? '#47ec05' :
+            buildStatus == 'UNSTABLE' ? '#d5ee0d' :
+            buildStatus == 'FAILURE'  ? '#ec2805' :
+            buildStatus == 'ABORTED'  ? '#808080' :
+            '#0000ff'  // default (blue)
+
 
 
     // Construct message
@@ -133,7 +135,8 @@ pipeline {
                 sh '''
                   trivy image --severity CRITICAL --exit-code 1 --no-progress \
                   --format json -o trivy-image-critical.json \
-                  solar-system-app:${BRANCH_NAME}-${GIT_COMMIT}
+                  String shortCommit = env.GIT_COMMIT.take(7)   // shorten commit SHA
+                  solar-system-app:${BRANCH_NAME}-${shortCommit}
                 '''
             }
         }
@@ -149,9 +152,7 @@ pipeline {
         }
 
         stage('Publish Reports to AWS S3') {
-            when {
-                branch 'PR*'
-            }
+            when { expression { return env.BRANCH_NAME.startsWith("PR") } }
             steps {
                 withAWS(
                     credentials: 'aws-jenkins-report-user-cred',
