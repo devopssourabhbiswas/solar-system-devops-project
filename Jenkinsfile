@@ -167,7 +167,7 @@ pipeline {
             }
         }
         }
-
+    }
     post {
         always {
             slackNotification(currentBuild.result)
@@ -200,5 +200,4 @@ pipeline {
             echo 'Pipeline failed. Check reports.'
         }
     }
-}
 }
