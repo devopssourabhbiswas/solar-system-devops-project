@@ -1,18 +1,4 @@
-def slackNotification(String buildStatus = 'STARTED') {
-    buildStatus = buildStatus ?: 'SUCCESS'
-
-    // Map status to color
-    def color = buildStatus == 'SUCCESS'  ? '#47ec05' :
-            buildStatus == 'UNSTABLE' ? '#d5ee0d' :
-            buildStatus == 'FAILURE'  ? '#ec2805' :
-            buildStatus == 'ABORTED'  ? '#808080' :
-            '#0000ff'  // default (blue)
-
-    // Construct message
-    def msg = "${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}\n${env.BUILD_URL}"
-    def msg2 = "Check the reports at: https://s3.console.aws.amazon.com/s3/buckets/solar-system-jenkins-reports-bucket-devops-sb/jenkins-${BUILD_ID}/"
-    slackSend color: color, message: msg + "\n\n" + msg2
-}
+@Library('jenkins-shared-library') _
 
 pipeline {
     agent any
@@ -126,12 +112,17 @@ pipeline {
 
         stage('Trivy Docker Image Scan') {
             steps {
-                echo 'Running Trivy Scan...'
-                sh """
-                  trivy image --severity CRITICAL --exit-code 1 --no-progress \
-                  --format json -o trivy-image-critical.json \
-                  solar-system-app:${env.BRANCH_NAME}-${env.SHORT_COMMIT}
-                """
+            script {
+            String shortCommit = env.GIT_COMMIT.take(7)
+            def imageName = "solar-system-app:${env.BRANCH_NAME}-${shortCommit}"
+
+            // Run Trivy scan
+            TrivyScan.Trivy_Docker_Image_Scan(imageName)
+
+            // Convert report to HTML + JUnit
+            def reportFile = "trivy-${env.BRANCH_NAME}-${env.BUILD_ID}.json"
+            TrivyScan.reportsConverter(reportFile)
+                   }
             }
         }
 
