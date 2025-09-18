@@ -144,17 +144,21 @@ pipeline {
             steps {
                 withAWS(credentials: 'aws-jenkins-report-user-cred', region: 'ap-south-1') {
                     echo 'Publish Reports to AWS S3'
+                    script {
+                        def trivyReport = "trivy-${env.BRANCH_NAME}-${env.BUILD_ID}.json"
+                        def reportsDir = "reports-${env.BUILD_ID}"
+                        
                     sh '''
                       ls -ltr
-                      mkdir reports-$BUILD_ID
-                      cp -rf coverage/lcov-report reports-$BUILD_ID/
-                      cp gitleaks-report.json reports-$BUILD_ID/
-                      cp trivy-image-critical.json reports-$BUILD_ID/
-                      cp test-results.xml reports-$BUILD_ID/
-                      ls -ltr reports-$BUILD_ID/
+                      mkdir -p ${reportsDir}
+                      cp -rf coverage/lcov-report ${reportsDir}/
+                      cp gitleaks-report.json ${reportsDir}/
+                      cp ${trivyReport} ${reportsDir}/
+                      cp test-results.xml ${reportsDir}/
+                      ls -ltr ${reportsDir}/
                     '''
                     s3Upload(
-                      workingDir: "reports-$BUILD_ID",
+                      workingDir: "${reportsDir}",
                       includePathPattern: '**/*',
                       bucket: 'solar-system-jenkins-reports-bucket-devops-sb',
                       path: "jenkins-$BUILD_ID/"
@@ -196,4 +200,5 @@ pipeline {
             echo 'Pipeline failed. Check reports.'
         }
     }
+}
 }
