@@ -137,11 +137,14 @@ pipeline {
 
         stage('Push Docker Image to Docker Hub') {
             steps {
-                withDockerRegistry(credentialsId: 'dockercred_for_agentsourabh',
-                                   url: 'https://index.docker.io/v1/') {
-                    dockerImage.push()      // pushes the image with the exact tag built
-                    dockerImage.push('latest') // also pushes an additional 'latest' tag
-                }
+                withDockerRegistry(
+                    credentialsId: 'dockercred_for_agentsourabh',
+                    url: 'https://index.docker.io/v1/') {
+                    script {
+                        dockerImage.push()       // pushes the image with the exact tag built
+                        dockerImage.push('latest') // also pushes an additional 'latest' tag
+                    }
+                    }
             }
         }
 
