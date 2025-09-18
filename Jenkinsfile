@@ -59,6 +59,7 @@ pipeline {
 
                 stage('NPM Dependency Audit') {
                     steps {
+                        unstash 'solar-project-node_modules'
                         echo 'Running npm audit...'
                         sh '''
                           npm audit --audit-level=critical || true
