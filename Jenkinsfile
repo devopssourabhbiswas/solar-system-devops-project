@@ -1,15 +1,12 @@
 def slackNotification(String buildStatus = 'STARTED') {
     buildStatus = buildStatus ?: 'SUCCESS'
 
-
     // Map status to color
-def color = buildStatus == 'SUCCESS'  ? '#47ec05' :
+    def color = buildStatus == 'SUCCESS'  ? '#47ec05' :
             buildStatus == 'UNSTABLE' ? '#d5ee0d' :
             buildStatus == 'FAILURE'  ? '#ec2805' :
             buildStatus == 'ABORTED'  ? '#808080' :
             '#0000ff'  // default (blue)
-
-
 
     // Construct message
     def msg = "${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}\n${env.BUILD_URL}"
@@ -26,10 +23,10 @@ pipeline {
     }
 
     environment {
-        MONGO_URI = credentials('Solar-mongoatlas-db-uri')
+        MONGO_URI      = credentials('Solar-mongoatlas-db-uri')
         MONGO_USERNAME = credentials('Solar-mongoatlas-db-username')
         MONGO_PASSWORD = credentials('Solar-mongoatlas-db-password')
-        SONAR_TOKEN = credentials('SonarQube-Token')
+        SONAR_TOKEN    = credentials('SonarQube-Token')
         SONAR_SCANNER_HOME = tool 'sonarqube-scanner-7.2.0'
     }
 
@@ -56,7 +53,7 @@ pipeline {
                         snykSecurity(
                             severity: 'critical',
                             snykInstallation: 'snyk latest',
-                            snykTokenId: 'devopsourabhbiswas-organization-token',
+                            snykTokenId: 'devopsourabhbiswas-organization-token'
                         )
                     }
                 }
@@ -98,14 +95,14 @@ pipeline {
 
         stage('SAST-Analysis-SonarQube') {
             steps {
-                    withSonarQubeEnv('sonar-qube-server') {
-                        sh '''
-                        $SONAR_SCANNER_HOME/bin/sonar-scanner \
-                        -Dsonar.projectKey=Solar-System-Project \
-                        -Dsonar.sources=app.js \
-                        -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info
-                        '''
-                    }
+                withSonarQubeEnv('sonar-qube-server') {
+                    sh '''
+                    $SONAR_SCANNER_HOME/bin/sonar-scanner \
+                    -Dsonar.projectKey=Solar-System-Project \
+                    -Dsonar.sources=app.js \
+                    -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info
+                    '''
+                }
             }
         }
 
@@ -116,47 +113,42 @@ pipeline {
                 }
             }
         }
-    }
 
         stage('Build Docker Image') {
             steps {
-                // Print all available environment variables
                 sh 'printenv'
-            script {
-                String shortCommit = env.GIT_COMMIT.take(7)   // shorten commit SHA
-                dockerImage = docker.build("solar-system-app:${BRANCH_NAME}-${shortCommit}")
-            }
+                script {
+                    env.SHORT_COMMIT = env.GIT_COMMIT.take(7)
+                    dockerImage = docker.build("solar-system-app:${env.BRANCH_NAME}-${env.SHORT_COMMIT}")
+                }
             }
         }
 
         stage('Trivy Docker Image Scan') {
             steps {
                 echo 'Running Trivy Scan...'
-                sh '''
+                sh """
                   trivy image --severity CRITICAL --exit-code 1 --no-progress \
                   --format json -o trivy-image-critical.json \
-                  solar-system-app:${BRANCH_NAME}-${shortCommit}
-                '''
+                  solar-system-app:${env.BRANCH_NAME}-${env.SHORT_COMMIT}
+                """
             }
         }
 
         stage('Push Docker Image to Docker Hub') {
             steps {
-                    withDockerRegistry(credentialsId: 'dockercred_for_agentsourabh',
-                    url: 'https://index.docker.io/v1/') {
-                        dockerImage.push() //pushes the image with the exact tag you built.
-                        dockerImage.push('latest') //also pushes an additional 'latest' tag
-                    }
+                withDockerRegistry(credentialsId: 'dockercred_for_agentsourabh',
+                                   url: 'https://index.docker.io/v1/') {
+                    dockerImage.push()      // pushes the image with the exact tag built
+                    dockerImage.push('latest') // also pushes an additional 'latest' tag
+                }
             }
         }
 
         stage('Publish Reports to AWS S3') {
             when { expression { return env.BRANCH_NAME.startsWith("PR") } }
             steps {
-                withAWS(
-                    credentials: 'aws-jenkins-report-user-cred',
-                    region: 'ap-south-1'
-                ) {
+                withAWS(credentials: 'aws-jenkins-report-user-cred', region: 'ap-south-1') {
                     echo 'Publish Reports to AWS S3'
                     sh '''
                       ls -ltr
@@ -168,14 +160,15 @@ pipeline {
                       ls -ltr reports-$BUILD_ID/
                     '''
                     s3Upload(
-                      file: "reports-$BUILD_ID",
+                      workingDir: "reports-$BUILD_ID",
+                      includePathPattern: '**/*',
                       bucket: 'solar-system-jenkins-reports-bucket-devops-sb',
                       path: "jenkins-$BUILD_ID/"
-                      )
+                    )
                 }
             }
         }
-        
+    }
 
     post {
         always {
@@ -183,13 +176,16 @@ pipeline {
             archiveArtifacts artifacts: 'gitleaks-report.json', onlyIfSuccessful: false
             archiveArtifacts artifacts: 'test-results.xml'
             junit allowEmptyResults: true, testResults: 'test-results.xml'
-            archiveArtifacts artifacts: 'trivy-image-critical.json', onlyIfSuccessful: false
+            archiveArtifacts artifacts: '*.json', onlyIfSuccessful: false
+            archiveArtifacts artifacts: "trivy-*.{html,xml}", onlyIfSuccessful: false
+
             // Convert JSON to HTML and JUnit XML formats
             sh '''
             trivy convert --format template \
               --template "/usr/local/share/trivy/templates/junit.tpl" \
               --output trivy-image-critical.xml trivy-image-critical.json
-              '''
+            '''
+
             publishHTML(
                 allowMissing: true,
                 alwaysLinkToLastBuild: true,
