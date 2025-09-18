@@ -31,7 +31,7 @@ pipeline {
                     caches: [
                     arbitraryFileCache(
                     cacheName: 'npm-dependency-cache',
-                    cacheValidityDecidingFile: 'package-lock.json', 
+                    cacheValidityDecidingFile: 'package-lock.json',
                     excludes: '',
                     includes: '**/*',
                     path: 'node_modules')],
@@ -47,7 +47,6 @@ pipeline {
             parallel {
                 stage('Snyk Scan Test') {
                     steps {
-                        unstash 'solar-project-node_modules'
                         echo 'Running Snyk Scan...'
                         snykSecurity(
                             severity: 'critical',
