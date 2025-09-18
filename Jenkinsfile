@@ -27,7 +27,19 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm ci'
+                cache(
+                    caches: [
+                    arbitraryFileCache(
+                    cacheName: 'npm-dependency-cache',
+                    cacheValidityDecidingFile: 'package-lock.json', 
+                    excludes: '',
+                    includes: '**/*',
+                    path: 'node_modules')],
+                    defaultBranch: 'main',
+                    maxCacheSize: 550) {
+                        sh 'npm ci'
+                        stash includes: 'node_modules/**', name: 'solar-project-node_modules'
+                    }
             }
         }
 
@@ -35,6 +47,7 @@ pipeline {
             parallel {
                 stage('Snyk Scan Test') {
                     steps {
+                        unstash 'solar-project-node_modules'
                         echo 'Running Snyk Scan...'
                         snykSecurity(
                             severity: 'critical',
@@ -59,6 +72,7 @@ pipeline {
             steps {
                 echo 'Running Code Coverage...'
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                    unstash 'solar-project-node_modules'
                     sh 'npm run coverage'
                 }
             }
@@ -66,6 +80,7 @@ pipeline {
 
         stage('Unit Testing') {
             steps {
+                unstash 'solar-project-node_modules'
                 sh 'npm test'
             }
         }
@@ -165,7 +180,7 @@ pipeline {
                     )
                 }
             }
-        }
+          }
         }
     }
     post {
