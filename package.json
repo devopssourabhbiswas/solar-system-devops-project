@@ -15,7 +15,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
-    "express": "^4.18.2",
+    "express": "^4.21.2",
     "mocha-junit-reporter": "^2.2.1",
     "mongoose": "5.13.20",
     "nyc": "^15.1.0",
