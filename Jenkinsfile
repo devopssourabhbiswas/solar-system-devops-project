@@ -17,6 +17,7 @@ pipeline {
     }
 
     stages {
+        //Start of CI stages
         stage('VM Node Version on Agent') {
             steps {
                 sh 'node -v'
@@ -182,7 +183,8 @@ pipeline {
                 }
             }
         }
-
+                
+        // Start of CD stages for GitOps repo update and PR raise
         stage('Update Image tags in GitOps repo for K8s Deployment YAML') {
             when { expression { return env.BRANCH_NAME.startsWith("PR") } }
             steps {
@@ -213,7 +215,8 @@ pipeline {
                     //             --base main --head feature-${BUILD_ID}
                     //'''
                 }
-            }
+        }
+
         }
 
     post {
