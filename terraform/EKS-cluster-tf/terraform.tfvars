@@ -1,0 +1,5 @@
+aws_region      = "ap-south-1"
+profile         = "solarproj-sb"
+environment     = "production"
+cluster_name    = "solar-project-eks-cluster"
+cluster_version = "1.33"
