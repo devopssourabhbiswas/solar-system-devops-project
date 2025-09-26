@@ -188,33 +188,39 @@ pipeline {
         stage('Update Image tags in GitOps repo for K8s Deployment YAML') {
             when { expression { return env.BRANCH_NAME.startsWith("PR") } }
             steps {
-            // script {
-            // sh '''
-            //git clone https://github.com/<org>/gitops-repo.git
-            //cd gitops-repo
-            //git checkout -b feature-${BUILD_ID}
-            //yq e -i '.image.tag = "${BUILD_ID}"' app/values.yaml
-            //git config user.name "jenkins"
-            //git config user.email "jenkins@example.com"
-            //git add .
-            //git commit -m "Update image tag to ${BUILD_ID}"
-            //git push origin feature-${BUILD_ID}
-            // '''}
+                withCredentials([
+                    usernamePassword(credentialsId: 'github-creds-for-gitops-repo',
+                    usernameVariable: 'GIT_USERNAME',
+                    passwordVariable: 'GIT_PASSWORD')]) {
+            sh '''
+            git clone https://github.com/<org>/gitops-repo.git
+            cd gitops-repo
+            git checkout -b feature-${BUILD_ID}
+            yq e -i ".image.tag = \"${BUILD_ID}\"" app/values.yaml
+            git config user.name "jenkins"
+            git config user.email "jenkins@example.com"
+            git add .
+            git commit -m "Update image tag to ${BUILD_ID}"
+            git push origin feature-${BUILD_ID}
+            '''
             }
         }
 
         stage('Raise PR for GitOps Repo') {
             when { expression { return env.BRANCH_NAME.startsWith("PR") } } // Only for PR branches
             steps {
-                //script {
-                    //sh '''
-                    //echo 'Raising PR for GitOps Repo - Placeholder'
-                    //cd gitops-repo
-                    //gh pr create --title "Deploy build ${BUILD_ID}" \
-                    //             --body "Update Helm chart for build ${BUILD_ID}" \
-                    //             --base main --head feature-${BUILD_ID}
-                    //'''
-                }
+                withCredentials([
+                    usernamePassword(credentialsId: 'github-creds-for-gitops-repo',
+                    usernameVariable: 'GIT_USERNAME',
+                    passwordVariable: 'GIT_PASSWORD')]) {
+                    sh '''
+                    cd gitops-repo
+                    gh auth login --with-token <<< "$GITHUB_TOKEN"
+                    echo 'Raising PR for GitOps Repo - Placeholder'
+                    gh pr create --title "Deploy build ${BUILD_ID}" \
+                                 --body "Update Helm chart for build ${BUILD_ID}" \
+                                 --base main --head feature-${BUILD_ID}
+                    '''
         }
 
         }
