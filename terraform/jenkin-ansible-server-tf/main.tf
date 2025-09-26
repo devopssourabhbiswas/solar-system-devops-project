@@ -1,5 +1,5 @@
 terraform {
-  required_version = "1.13"
+  required_version = "1.4"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -40,7 +40,7 @@ module "jenkins-main-server" {
   user_data_script  = file("${path.module}/scripts/install_jenkins_ubuntu24.04LTS.sh")
 }
 
-module "ansible-controller-server" {
+/* module "ansible-controller-server" {
   source            = "./modules/ec2"
   ami_id            = var.ami_id
   instance_type     = var.instance_type
@@ -52,4 +52,4 @@ module "ansible-controller-server" {
   root_volume_size  = var.root_volume_size
   root_volume_type  = var.root_volume_type
   user_data_script  = file("${path.module}/scripts/install_ansible_ubuntu24.04LTS.sh")
-}
+} */
