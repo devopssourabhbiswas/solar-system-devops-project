@@ -168,3 +168,89 @@ resource "helm_release" "aws_load_balancer_controller" {
     value = "aws-load-balancer-controller"
   }
 }
+
+data "aws_caller_identity" "current" {}
+resource "aws_iam_policy" "secretsmanager_policy" {
+  name        = "SolarProjectSecretsManagerPolicy"
+  description = "Allow ESO to read MongoDB secret from AWS Secrets Manager"
+  policy      = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+      ],
+      "Resource": "arn:aws:secretsmanager:ap-south-1:${data.aws_caller_identity.current.account_id}:secret:solar-project-mongodb-creds*"
+    }
+  ]
+}
+EOF
+}
+
+module "eso_irsa_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.0"
+
+  role_name = "eso-secretsmanager-role"
+
+  # attach extra custom policy here
+  role_policy_arns = {
+   secretsmanager = aws_iam_policy.secretsmanager_policy.arn
+   }
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["external-secrets:external-secrets"] # must match SA name in Helm
+    }
+  }
+}
+
+resource "helm_release" "external_secrets" {
+  name             = "external-secrets"
+  repository       = "https://charts.external-secrets.io"
+  chart            = "external-secrets"
+  version          = "0.9.13"
+  namespace        = "external-secrets"
+  create_namespace = true
+
+  set {
+    name  = "serviceAccount.name"
+    value = "external-secrets"
+  }
+
+  set {
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = module.eso_irsa_role.iam_role_arn
+  }
+}
+
+
+resource "kubernetes_manifest" "cluster_secretstore" {
+  manifest = {
+    apiVersion = "external-secrets.io/v1beta1"
+    kind       = "ClusterSecretStore"
+    metadata = {
+      name = "aws-secretsmanager"
+    }
+    spec = {
+      provider = {
+        aws = {
+          service = "SecretsManager"
+          region  = "ap-south-1"
+          auth = {
+            jwt = {
+              serviceAccountRef = {
+                name      = "external-secrets"
+                namespace = "external-secrets"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

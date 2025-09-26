@@ -128,17 +128,17 @@ pipeline {
 
         stage('Trivy Docker Image Scan') {
             steps {
-            script {
-            String shortCommit = env.GIT_COMMIT.take(7)
-            def imageName = "solar-system-app:${env.BRANCH_NAME}-${shortCommit}"
+                script {
+                    String shortCommit = env.GIT_COMMIT.take(7)
+                    def imageName = "solar-system-app:${env.BRANCH_NAME}-${shortCommit}"
 
-            // Run Trivy scan
-            TrivyScan.Trivy_Docker_Image_Scan(imageName)
+                    // Run Trivy scan
+                    TrivyScan.Trivy_Docker_Image_Scan(imageName)
 
-            // Convert report to HTML + JUnit
-            def reportFile = "trivy-${env.BRANCH_NAME}-${env.BUILD_ID}.json"
-            TrivyScan.reportsConverter(reportFile)
-            }
+                    // Convert report to HTML + JUnit
+                    def reportFile = "trivy-${env.BRANCH_NAME}-${env.BUILD_ID}.json"
+                    TrivyScan.reportsConverter(reportFile)
+                }
             }
         }
 
@@ -148,8 +148,7 @@ pipeline {
                     credentialsId: 'dockercred_for_agentsourabh',
                     url: 'https://index.docker.io/v1/') {
                     script {
-                        dockerImage.push()       // pushes the image with the exact tag built
-                        dockerImage.push('latest') // also pushes an additional 'latest' tag
+                        dockerImage.push('dev-latest') // pushes an 'dev-latest' tag
                     }
                     }
             }
@@ -163,8 +162,8 @@ pipeline {
                     script {
                         def trivyReport = "trivy-${env.BRANCH_NAME}-${env.BUILD_ID}.json"
                         def reportsDir = "reports-${env.BUILD_ID}"
-                        
-                    sh '''
+
+                        sh '''
                       ls -ltr
                       mkdir -p ${reportsDir}
                       cp -rf coverage/lcov-report ${reportsDir}/
@@ -173,7 +172,7 @@ pipeline {
                       cp test-results.xml ${reportsDir}/
                       ls -ltr ${reportsDir}/
                     '''
-                    s3Upload(
+                        s3Upload(
                       workingDir: "${reportsDir}",
                       includePathPattern: '**/*',
                       bucket: 'solar-system-jenkins-reports-bucket-devops-sb',
@@ -183,30 +182,30 @@ pipeline {
                 }
             }
         }
-                
+
         // Start of CD stages for GitOps repo update and PR raise
-        stage('Update Image tags in GitOps repo for K8s Deployment YAML') {
+        stage('Update Image tags dev-latest') {
             when { expression { return env.BRANCH_NAME.startsWith("PR") } }
             steps {
                 withCredentials([
                     usernamePassword(credentialsId: 'github-creds-for-gitops-repo',
                     usernameVariable: 'GIT_USERNAME',
                     passwordVariable: 'GIT_PASSWORD')]) {
-            sh '''
-            git clone https://github.com/<org>/gitops-repo.git
+                    sh '''
+            git clone https://github.com/devopssourabhbiswas/solar-system-devops-project-gitops-repo.git
             cd gitops-repo
             git checkout -b feature-${BUILD_ID}
-            yq e -i ".image.tag = \"${BUILD_ID}\"" app/values.yaml
+            yq e -i '.image.tag = "dev-latest"' charts/solar-system-helm/values-dev.yaml
             git config user.name "jenkins"
             git config user.email "jenkins@example.com"
             git add .
             git commit -m "Update image tag to ${BUILD_ID}"
             git push origin feature-${BUILD_ID}
-            '''
+            '''}
             }
         }
 
-        stage('Raise PR for GitOps Repo') {
+        stage('Raise PR dev-latest') {
             when { expression { return env.BRANCH_NAME.startsWith("PR") } } // Only for PR branches
             steps {
                 withCredentials([
@@ -218,13 +217,71 @@ pipeline {
                     gh auth login --with-token <<< "$GITHUB_TOKEN"
                     echo 'Raising PR for GitOps Repo - Placeholder'
                     gh pr create --title "Deploy build ${BUILD_ID}" \
-                                 --body "Update Helm chart for build ${BUILD_ID}" \
-                                 --base main --head feature-${BUILD_ID}
+                                 --body "Update dev environment to dev-latest (build ${BUILD_NUMBER})" \
+                                 --base main --head dev-build-feature-${BUILD_ID}
                     '''
+                    }}
         }
 
+        stage('Update Image tags to prod-latest') {
+            when {
+                expression { return env.BRANCH_NAME == "main" } // only after PR merged into main
+            }
+            steps {
+                withDockerRegistry(
+                credentialsId: 'dockercred_for_agentsourabh',
+                url: 'https://index.docker.io/v1/') {
+                    script {
+                        docker tag "solar-system-app:${env.BRANCH_NAME}-${env.SHORT_COMMIT}" "solar-system-app:prod-latest" // tagging the image with prod-latest
+                        dockerImage.push('prod-latest') // pushes 'prod-latest' tag
+                    }
+                }
+            }
         }
 
+        stage('Update Image tags prod-latest') {
+            when {
+                expression { return env.BRANCH_NAME == "main" } // only after PR merged into main
+            }
+            steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'github-creds-for-gitops-repo',
+                    usernameVariable: 'GIT_USERNAME',
+                    passwordVariable: 'GIT_PASSWORD')]) {
+                    sh '''
+            git clone https://github.com/devopssourabhbiswas/solar-system-devops-project-gitops-repo.git
+            cd gitops-repo
+            git checkout -b prod-build-${BUILD_NUMBER}
+            yq e -i '.image.tag = "prod-latest"' charts/solar-system-helm/values-prod.yaml
+            git config user.name "jenkins"
+            git config user.email "jenkins@example.com"
+            git add .
+            git commit -m "Promote to prod-latest (build ${BUILD_NUMBER}"
+            git push origin prod-build-${BUILD_NUMBER}
+            '''}
+            }
+        }
+
+        stage('Raise PR prod-latest') {
+            when {
+                expression { return env.BRANCH_NAME == "main" } // only after PR merged into main
+            }
+            steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'github-creds-for-gitops-repo',
+                    usernameVariable: 'GIT_USERNAME',
+                    passwordVariable: 'GIT_PASSWORD')]) {
+                    sh '''
+                    cd gitops-repo
+                    gh auth login --with-token <<< "$GITHUB_TOKEN"
+                    echo 'Raising PR for GitOps Repo - Placeholder'
+                    gh pr create --title "Promote to prod-latest (build ${BUILD_NUMBER})" \
+                                 --body "Update prod environment to prod-latest (build ${BUILD_NUMBER})" \
+                                 --base main --head prod-build-${BUILD_NUMBER}
+                    '''
+                    }}
+        }
+    }
     post {
         always {
             slackNotification(currentBuild.result)
