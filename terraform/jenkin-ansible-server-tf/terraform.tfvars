@@ -7,6 +7,7 @@ allowed_ports = {
   http    = 80
   https   = 443
   jenkins = 8080
+  sonar   = 9000
 }
 environment    = "dev"
 az_name        = "ap-south-1a"
