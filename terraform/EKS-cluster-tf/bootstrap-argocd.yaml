@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bootstrap-argocd
+  namespace: argocd          # ArgoCD always watches Applications in its namespace
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/devopssourabhbiswas/solar-system-devops-project-gitops-repo.git'  # your GitOps repo
+    targetRevision: main                                       # branch ArgoCD tracks
+    path: gitops-repo/apps                                                 # tells it to look at /apps directory
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:           # makes Argo continuously apply changes
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
