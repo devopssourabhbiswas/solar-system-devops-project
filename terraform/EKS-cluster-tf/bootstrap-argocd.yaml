@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: 'https://github.com/devopssourabhbiswas/solar-system-devops-project-gitops-repo.git'  # your GitOps repo
     targetRevision: main                                       # branch ArgoCD tracks
-    path: gitops-repo/apps                                                 # tells it to look at /apps directory
+    path: gitops-repo/apps                                     # tells it to look at gitops-repo/apps directory
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
