@@ -184,8 +184,25 @@ pipeline {
         }
 
         // Start of CD stages for GitOps repo update and PR raise
-        stage('Update Image tags dev-latest') {
-            when { expression { return env.BRANCH_NAME.startsWith("PR") } }
+
+        stage('Update Build number Image tags to dev-latest') {
+            when {
+                expression { return env.BRANCH_NAME.startsWith("PR") } // Only for PR branches
+            }
+            steps {
+                withDockerRegistry(
+                credentialsId: 'dockercred_for_agentsourabh',
+                url: 'https://index.docker.io/v1/') {
+                    script {
+                        docker tag "solar-system-app:${env.BRANCH_NAME}-${env.SHORT_COMMIT}" "solar-system-app:dev-latest" // tagging the image with prod-latest
+                        dockerImage.push('dev-latest') // pushes 'prod-latest' tag
+                    }
+                }
+            }
+        }
+
+        stage('Update Image tags to dev-latest') {
+            when { expression { return env.BRANCH_NAME.startsWith("PR") } } // Only for PR branches
             steps {
                 withCredentials([
                     usernamePassword(credentialsId: 'github-creds-for-gitops-repo',
@@ -195,7 +212,7 @@ pipeline {
             git clone https://github.com/devopssourabhbiswas/solar-system-devops-project-gitops-repo.git
             cd gitops-repo
             git checkout -b feature-${BUILD_ID}
-            yq e -i '.image.tag = "dev-latest"' charts/solar-system-helm/values-dev.yaml
+            yq e -i '.image.tag = "dev-latest"' charts/solar-system-app/values-dev.yaml
             git config user.name "jenkins"
             git config user.email "jenkins@example.com"
             git add .
@@ -223,7 +240,7 @@ pipeline {
                     }}
         }
 
-        stage('Update Image tags to prod-latest') {
+        stage('Update Build number Image tags to prod-latest') {
             when {
                 expression { return env.BRANCH_NAME == "main" } // only after PR merged into main
             }
@@ -239,7 +256,7 @@ pipeline {
             }
         }
 
-        stage('Update Image tags prod-latest') {
+        stage('Update Image tags to prod-latest') {
             when {
                 expression { return env.BRANCH_NAME == "main" } // only after PR merged into main
             }

@@ -41,7 +41,7 @@ module "eks" {
       instance_types = ["t3a.medium", "t3.medium"]
       capacity_type  = "SPOT"
 
-      disk_size       = 20
+      disk_size       = 50
       disk_type       = "gp3"
       disk_iops       = 3000
       disk_throughput = 125
@@ -150,4 +150,294 @@ module "eso_irsa_role" {
       namespace_service_accounts = ["external-secrets:external-secrets"]
     }
   }
+}
+
+
+# EBS CSI Driver - IAM Policy
+resource "aws_iam_policy" "ebs_csi_driver" {
+  name        = "${var.cluster_name}-ebs-csi-driver-policy"
+  description = "IAM policy for EBS CSI Driver"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateSnapshot",
+          "ec2:AttachVolume",
+          "ec2:DetachVolume",
+          "ec2:ModifyVolume",
+          "ec2:DescribeAvailabilityZones",
+          "ec2:DescribeInstances",
+          "ec2:DescribeSnapshots",
+          "ec2:DescribeTags",
+          "ec2:DescribeVolumes",
+          "ec2:DescribeVolumesModifications"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateTags"
+        ]
+        Resource = [
+          "arn:aws:ec2:*:*:volume/*",
+          "arn:aws:ec2:*:*:snapshot/*"
+        ]
+        Condition = {
+          StringEquals = {
+            "ec2:CreateAction" = [
+              "CreateVolume",
+              "CreateSnapshot"
+            ]
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:DeleteTags"
+        ]
+        Resource = [
+          "arn:aws:ec2:*:*:volume/*",
+          "arn:aws:ec2:*:*:snapshot/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateVolume"
+        ]
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "aws:RequestTag/ebs.csi.aws.com/cluster" = "true"
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateVolume"
+        ]
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "aws:RequestTag/CSIVolumeName" = "*"
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:DeleteVolume"
+        ]
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "ec2:ResourceTag/ebs.csi.aws.com/cluster" = "true"
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:DeleteVolume"
+        ]
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "ec2:ResourceTag/CSIVolumeName" = "*"
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:DeleteVolume"
+        ]
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "ec2:ResourceTag/kubernetes.io/created-for/pvc/name" = "*"
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:DeleteSnapshot"
+        ]
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "ec2:ResourceTag/CSIVolumeSnapshotName" = "*"
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:DeleteSnapshot"
+        ]
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "ec2:ResourceTag/ebs.csi.aws.com/cluster" = "true"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${var.cluster_name}-ebs-csi-driver-policy"
+    Environment = var.environment
+  }
+}
+
+# EBS CSI Driver - IRSA Role
+module "ebs_csi_driver_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.0"
+
+  role_name             = "${var.cluster_name}-ebs-csi-driver-role"
+  attach_ebs_csi_policy = true
+  
+  # Attach our custom policy
+  role_policy_arns = {
+    ebs_csi = aws_iam_policy.ebs_csi_driver.arn
+  }
+
+  oidc_providers = {
+    eks = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
+    }
+  }
+
+  tags = {
+    Name        = "${var.cluster_name}-ebs-csi-driver-role"
+    Environment = var.environment
+  }
+}
+
+# EBS CSI Driver - EKS Addon
+resource "aws_eks_addon" "ebs_csi_driver" {
+  cluster_name             = module.eks.cluster_name
+  addon_name               = "aws-ebs-csi-driver"
+  addon_version            = var.ebs_csi_driver_version
+  service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
+  
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  tags = {
+    Name        = "${var.cluster_name}-ebs-csi-driver-addon"
+    Environment = var.environment
+  }
+
+  depends_on = [
+    module.ebs_csi_driver_irsa
+  ]
+}
+
+# StorageClass - GP3 (Default)
+resource "kubernetes_storage_class_v1" "gp3" {
+  metadata {
+    name = "gp3"
+    
+    annotations = {
+      "storageclass.kubernetes.io/is-default-class" = "true"
+    }
+    
+    labels = {
+      "app.kubernetes.io/managed-by" = "terraform"
+      "app.kubernetes.io/component"  = "storage"
+    }
+  }
+
+  storage_provisioner    = "ebs.csi.aws.com"
+  reclaim_policy         = "Retain"
+  allow_volume_expansion = true
+  volume_binding_mode    = "WaitForFirstConsumer"
+
+  parameters = {
+    type      = "gp3"
+    encrypted = "true"
+    fsType    = "ext4"
+    iops      = "3000"
+    throughput = "125"
+    
+    # Tags for EBS volumes
+    "csi.storage.k8s.io/fstype" = "ext4"
+    tagSpecification_1 = "Name={{ .PVCNamespace }}/{{ .PVCName }}"
+    tagSpecification_2 = "Project=solar-project"
+    tagSpecification_3 = "ManagedBy=terraform"
+    tagSpecification_4 = "Environment=${var.environment}"
+  }
+
+  depends_on = [
+    aws_eks_addon.ebs_csi_driver
+  ]
+}
+
+# StorageClass - GP3 Monitoring (High Performance)
+resource "kubernetes_storage_class_v1" "gp3_monitoring" {
+  metadata {
+    name = "gp3-monitoring"
+    
+    annotations = {
+      "storageclass.kubernetes.io/is-default-class" = "false"
+    }
+    
+    labels = {
+      "app.kubernetes.io/managed-by" = "terraform"
+      "app.kubernetes.io/component"  = "storage"
+      "app.kubernetes.io/part-of"    = "monitoring"
+    }
+  }
+
+  storage_provisioner    = "ebs.csi.aws.com"
+  reclaim_policy         = "Retain"
+  allow_volume_expansion = true
+  volume_binding_mode    = "WaitForFirstConsumer"
+
+  parameters = {
+    type      = "gp3"
+    encrypted = "true"
+    fsType    = "ext4"
+    iops      = "5000"      # Higher IOPS for monitoring
+    throughput = "250"       # Higher throughput for monitoring
+    
+    # Tags
+    "csi.storage.k8s.io/fstype" = "ext4"
+    tagSpecification_1 = "Name={{ .PVCNamespace }}/{{ .PVCName }}"
+    tagSpecification_2 = "Project=solar-project"
+    tagSpecification_3 = "ManagedBy=terraform"
+    tagSpecification_4 = "Environment=${var.environment}"
+    tagSpecification_5 = "Component=monitoring"
+  }
+
+  depends_on = [
+    aws_eks_addon.ebs_csi_driver
+  ]
+}
+
+# Optional: Remove default annotation from existing gp2
+resource "null_resource" "remove_gp2_default" {
+  count = var.remove_existing_gp2_default ? 1 : 0
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws eks update-kubeconfig --name ${module.eks.cluster_name} --region ${var.aws_region}
+      kubectl annotate storageclass gp2 storageclass.kubernetes.io/is-default-class=false --overwrite 2>/dev/null || true
+    EOT
+  }
+
+  depends_on = [
+    kubernetes_storage_class_v1.gp3
+  ]
 }

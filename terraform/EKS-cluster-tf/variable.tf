@@ -45,3 +45,16 @@ variable "policy_arn" {
   description = "The ARN of the IAM policy to grant admin access to the EKS cluster."
   default = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
 }
+
+
+variable "ebs_csi_driver_version" {
+  description = "EBS CSI Driver addon version"
+  type        = string
+  default     = "v1.40.0-eksbuild.1"  # Latest as of Dec 2024
+}
+
+variable "remove_existing_gp2_default" {
+  description = "Remove default annotation from existing gp2 StorageClass"
+  type        = bool
+  default     = true
+}
