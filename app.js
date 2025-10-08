@@ -8,10 +8,26 @@ const mongoose = require("mongoose");
 const app = express();
 const cors = require('cors')
 const serverless = require('serverless-http')
+const promClient = require('prom-client');
+const promBundle = require('express-prom-bundle');
+
+// Prometheus metrics setup
+const metricsMiddleware = promBundle({
+    includeMethod: true, 
+    includePath: true, 
+    includeStatusCode: true, 
+    includeUp: true,
+    customLabels: { project_name: 'solar-system-app', app: 'backend' },
+    promClient: {
+        collectDefaultMetrics: {}
+    }
+});
 
 
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '/')));
+// Use the Prometheus metrics middleware
+app.use(metricsMiddleware);
 app.use(cors())
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
@@ -214,13 +230,24 @@ app.get('/live',   function(req, res) {
     });
 })
 
-// Readiness Check
-app.get('/ready',   function(req, res) {
-    res.setHeader('Content-Type', 'application/json');
-    res.send({
-        "status": "ready"
-    });
-})
+// Readiness Check Route
+app.get('/ready', function(req, res) {
+    // Mongoose connection states are:
+    // 0: disconnected
+    // 1: connected
+    // 2: connecting
+    // 3: disconnecting
+    
+    // Check if the mongoose connection state is 'connected'
+    if (mongoose.connection.readyState === 1) {
+        // If connected, send a 200 OK status
+        res.status(200).json({ "status": "ready", "db": "connected" });
+    } else {
+        // If not connected, send a 503 Service Unavailable status.
+        // The Kubernetes readiness probe will see this as a failure.
+        res.status(503).json({ "status": "not ready", "db": "disconnected" });
+    }
+});
 
 // Start server
 
