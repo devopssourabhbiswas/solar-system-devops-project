@@ -17,8 +17,10 @@ provider "aws" {
 }
 
 # Kubernetes Provider (for creating StorageClasses)
+# It configures the Kubernetes provider to authenticate to the EKS cluster
+# ONLY after the EKS module has finished creating it.
 provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
+  host                   = module.eks.cluster_endpoint 
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
 
   exec {

@@ -14,10 +14,26 @@ module "vpc" {
   enable_nat_gateway = true
   single_nat_gateway = true
 
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+  
+  # Tag for VPC.
   tags = {
     Terraform   = "true"
     Environment = var.environment
   }
+
+  public_subnet_tags = {
+    "kubernetes.io/role/elb" = "1"
+    Associatedwith = var.cluster_name
+    Type = "public"
+  }
+  private_subnet_tags = {
+    "kubernetes.io/role/internal-elb" = "1"
+    Associatedwith = var.cluster_name
+    Type = "private"
+  }
+
 }
 
 # EKS
@@ -35,19 +51,19 @@ module "eks" {
 
   eks_managed_node_groups = {
     default_group = {
-      min_size       = 2
-      max_size       = 4
-      desired_size   = 2
-      instance_types = ["t3a.medium", "t3.medium"]
-      capacity_type  = "SPOT"
+      min_size       = var.node_min_size
+      max_size       = var.node_max_size
+      desired_size   = var.node_desired_size
+      instance_types = var.node_instance_types
+      capacity_type  = var.node_capacity_type # "ON_DEMAND" or "SPOT"
 
-      disk_size       = 50
-      disk_type       = "gp3"
-      disk_iops       = 3000
-      disk_throughput = 125
+      /* disk_size       = var.disk_size */ # Because AMI is not mentioned, it uses default disk size of 20 GB
+      disk_type       = var.disk_type
+      disk_iops       = var.disk_iops
+      disk_throughput = var.disk_throughput
 
       labels = {
-        life_cycle = "spot"
+        life_cycle = var.node_capacity_type == "SPOT" ? "spot" : "on-demand"
       }
 
       tags = {
@@ -367,12 +383,11 @@ resource "kubernetes_storage_class_v1" "gp3" {
   parameters = {
     type      = "gp3"
     encrypted = "true"
-    fsType    = "ext4"
+    "csi.storage.k8s.io/fstype" = "ext4"
     iops      = "3000"
     throughput = "125"
     
     # Tags for EBS volumes
-    "csi.storage.k8s.io/fstype" = "ext4"
     tagSpecification_1 = "Name={{ .PVCNamespace }}/{{ .PVCName }}"
     tagSpecification_2 = "Project=solar-project"
     tagSpecification_3 = "ManagedBy=terraform"
@@ -401,19 +416,18 @@ resource "kubernetes_storage_class_v1" "gp3_monitoring" {
   }
 
   storage_provisioner    = "ebs.csi.aws.com"
-  reclaim_policy         = "Retain"
+  reclaim_policy         = "Retain" # Other option is Delete. Choose Retain to keep data even if PVC is deleted.
   allow_volume_expansion = true
   volume_binding_mode    = "WaitForFirstConsumer"
 
   parameters = {
     type      = "gp3"
     encrypted = "true"
-    fsType    = "ext4"
-    iops      = "5000"      # Higher IOPS for monitoring
+    "csi.storage.k8s.io/fstype" = "ext4"
+    iops      = "2500"      # Higher IOPS for monitoring also depends on volume size. Always check altermanager pvc requests. Calculate like 500 IOPS for 1GB volume
     throughput = "250"       # Higher throughput for monitoring
     
     # Tags
-    "csi.storage.k8s.io/fstype" = "ext4"
     tagSpecification_1 = "Name={{ .PVCNamespace }}/{{ .PVCName }}"
     tagSpecification_2 = "Project=solar-project"
     tagSpecification_3 = "ManagedBy=terraform"

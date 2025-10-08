@@ -28,6 +28,61 @@ variable "cluster_version" {
   default = "1.32"
 }
 
+variable "node_min_size" {
+  type        = number
+  description = "Minimum number of nodes in the node group."
+  default     = 2
+}
+
+variable "node_max_size" {
+  type        = number
+  description = "Maximum number of nodes in the node group."
+  default     = 4
+}
+
+variable "node_desired_size" {
+  type        = number
+  description = "Desired number of nodes in the node group."
+  default     = 2
+}
+
+variable "node_instance_types" {
+  type        = list(string)
+  description = "List of instance types for the node group."
+  default     = ["t3a.medium", "t3.medium"]
+}
+
+variable "node_capacity_type" {
+  type        = string
+  description = "Capacity type for the node group (e.g., ON_DEMAND, SPOT)."
+  default     = "SPOT"
+}
+
+variable "disk_size" {
+  type        = number
+  description = "Disk size for each node in GB."
+  default     = 25
+  
+}
+variable "disk_type" {
+  type        = string
+  description = "Disk type for each node (e.g., gp2, gp3, io1)."
+  default     = "gp3"
+}
+
+variable "disk_iops" {
+  type        = number
+  description = "Disk IOPS for each node (applicable for certain disk types like io1)."
+  default     = 3000
+}
+
+variable "disk_throughput" {
+  type        = number
+  description = "Disk throughput for each node (applicable for certain disk types like gp3)."
+  default     = 125
+}
+
+
 variable "user_arn" {
   type        = string
   description = "The ARN of the IAM user to grant admin access to the EKS cluster."
