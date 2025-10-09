@@ -24,12 +24,13 @@ const metricsMiddleware = promBundle({
 });
 
 
+// Middleware
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, '/')));
-// Use the Prometheus metrics middleware
-app.use(metricsMiddleware);
+app.use(metricsMiddleware); // Use the Prometheus metrics middleware
 app.use(cors())
 app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use(express.static(path.join(__dirname, '/')));
+
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
@@ -59,8 +60,7 @@ var dataSchema = new Schema({
 var planetModel = mongoose.model('planets', dataSchema);
 
 
-  // 🌍 Insert planet directly Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune
-
+  // Insert planets data to mongodb on server start
   planetModel.create({
       name: "Mercury",
       id: 1,
@@ -187,9 +187,8 @@ app.post('/planet',   function(req, res) {
     planetModel.findOne({
         id: req.body.id
     }, function(err, planetData) {
-        if (err) {
-            alert("Ooops, We only have 9 planets and a sun. Select a number from 0 - 9")
-            res.send("Error in Planet Data")
+        if (err || !planetData) {
+            res.status(404).json({ message: "Planet not found." });
         } else {
             res.send(planetData);
         }

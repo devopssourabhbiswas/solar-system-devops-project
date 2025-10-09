@@ -1,0 +1,163 @@
+/* style.css */
+
+/* --- General Body and Layout Styles --- */
+body {
+    background: url('/images/background.gif');
+    color: white;
+    font-family: 'Ubuntu', sans-serif;
+    display: flex;
+    flex-direction: column; /* Stack main sections vertically */
+    align-items: center;
+    justify-content: flex-start; /* Align content to the top */
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box; /* Ensures padding doesn't add to the width */
+}
+
+/* --- Main Content Wrapper --- */
+.main-container {
+    display: flex;
+    flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    width: 100%;
+    max-width: 1200px; /* Limit the max width on large screens */
+}
+
+.info-column {
+    flex: 1; /* Allows this column to grow */
+    min-width: 300px; /* Minimum width before wrapping */
+    max-width: 600px;
+}
+
+.image-column {
+    flex: 1; /* Allows this column to grow */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 300px;
+}
+
+/* --- Header / Title Button --- */
+.header-button {
+    font-size: 40px;
+    background: linear-gradient(90deg, rgba(50,43,167,1) 0%, rgba(82,41,124,1) 0%, rgba(137,26,205,1) 100%);
+    color: white;
+    font-family: 'Orbitron', sans-serif;
+    border-radius: 25px;
+    border: 1px solid rgb(35, 34, 36);
+    border-bottom-width: 3px;
+    width: 100%; /* Make it full width of its container */
+    height: 70px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+/* --- Search Form --- */
+.search-form {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.search-form input[type="number"] {
+    flex-grow: 1; /* Allows the input to take up remaining space */
+    background-color: rgb(218, 204, 226);
+    text-align: center;
+    border-radius: 25px;
+    border: 2px solid #609;
+    padding: 20px;
+    font-size: 1rem;
+}
+
+.search-form input[type="submit"] {
+    background-color: rgb(187, 75, 243);
+    color: white;
+    font-family: 'Ubuntu', sans-serif;
+    border-radius: 25px;
+    border: 2px solid #609;
+    padding: 20px;
+    width: 200px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+/* --- Planet Information --- */
+#planetName {
+    color: rgb(247, 145, 95);
+    font-family: 'Encode Sans', sans-serif;
+    font-size: 2.5rem;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+#planetDescription {
+    color: rgb(224, 224, 224);
+    font-family: 'Ubuntu', sans-serif;
+    line-height: 1.6;
+}
+
+#hostname {
+    color: rgb(93, 150, 237);
+    font-family: 'BioRhyme', serif;
+    font-size: 1.5rem;
+    margin-top: 20px;
+}
+
+/* --- Rotating Planet Image --- */
+#planetImage {
+    background: url('/images/solar-system.png') center center;
+    background-repeat: no-repeat;
+    background-size: contain; /* Use 'contain' to ensure the image never gets cut off */
+    content: '';
+    animation: spin 25s linear infinite;
+    width: 40vw; /* Use viewport width for responsive sizing */
+    height: 40vw;
+    max-width: 500px; /* Prevent it from getting too large on huge screens */
+    max-height: 500px;
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
+/* --- RESPONSIVE STYLES for MOBILE --- */
+@media (max-width: 768px) {
+    body {
+        padding: 10px; /* Reduce padding on small screens */
+    }
+
+    .main-container {
+        flex-direction: column-reverse; /* Stack image on top of info */
+    }
+
+    .header-button {
+        font-size: 24px; /* Reduce font size of header */
+        height: 60px;
+    }
+    
+    .search-form {
+        flex-direction: column; /* Stack search input and button */
+    }
+
+    .search-form input[type="submit"] {
+        width: 100%; /* Make button full width */
+    }
+
+    #planetName {
+        font-size: 2rem;
+    }
+
+    #hostname {
+        font-size: 1.2rem;
+    }
+
+    #planetImage {
+        width: 80vw; /* Make image larger relative to the smaller screen */
+        height: 80vw;
+    }
+}
