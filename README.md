@@ -1,72 +1,184 @@
 # Solar System MERN App & DevOps Showcase
 
-![GitHub repo size](https://img.shields.io/github/repo-size/your-username/your-repo-name)
-![GitHub top language](https://img.shields.io/github/languages/top/your-username/your-repo-name)
-![GitHub last commit](https://img.shields.io/github/last-commit/your-username/your-repo-name)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Platform](https://img.shields.io/badge/platform-AWS%20EKS-orange)
+![IaC](https://img.shields.io/badge/IaC-Terraform-darkgreen)
+![CI/CD](https://img.shields.io/badge/CD-Argo%20CD-blue)
+![Observability](https://img.shields.io/badge/Monitoring-Prometheus%20%7C%20Grafana-yellow)
 
-A full-stack MERN (MongoDB, Express, React, Node.js) application that serves as the centerpiece for a complete, production-grade DevOps project on AWS EKS. This repository contains the application source code. The entire cloud infrastructure and deployment configuration are managed in a separate [GitOps repository](https://github.com/your-username/your-gitops-repo).
+A **cloud-native MERN (MongoDB, Express, React, Node.js)** production-grade application designed to demonstrate end‑to‑end **DevOps, GitOps, and Cloud Engineering excellence** on **Amazon EKS (Elastic Kubernetes Service)**.
+This project showcases a *complete production‑grade platform* integrating **Infrastructure as Code (IaC)**, secure **CI/CD automation**, **GitOps deployment workflows**, and a **comprehensive observability stack**.
 
-This project demonstrates a holistic approach to modern cloud-native development, integrating best practices across Infrastructure as Code, CI/CD, GitOps, security, and observability.
+The Kubernetes deployment configuration are managed in a separate [GitOps repository](https://github.com/devopssourabhbiswas/solar-system-devops-project-gitops-repo).
 
-**Live Demo URL:** [solarapp.sourabhbiswasdevops.cloud](https://solarapp.sourabhbiswasdevops.cloud)
+- **Demo Video:** [YouTube Demo](https://your-youtube-demo-link) *(to be updated once available)*
+
+## 🧭 High-Level Architecture
+
+This solution is designed around automation, security, scalability, and deep insight.
+
 
 ![Solar System App Screenshot](https://your-image-hosting-service.com/solar-system-screenshot.png) 
 <!-- TODO: Add a screenshot of your live application -->
 
-## 🚀 Project Architecture Overview
+### 🧱 Core Components
 
-This project is built on a modern, decoupled CI/CD architecture using a push-then-pull model.
+| Layer | Component | Purpose |
+|:--|:--|:--|
+| **Cloud** | AWS EKS | Managed Kubernetes Control Plane |
+| **IaC** | Terraform | Declaratively provisions AWS VPC, EKS, IAM roles (IRSA) |
+| **CI** | Jenkins | Builds, tests, and packages app into Docker images |
+| **CD (GitOps)** | Argo CD | Pull‑based continuous delivery to EKS |
+| **App Configuration** | Helm | Helm charts define all Kubernetes application manifests |
+| **Secrets Management** | AWS Secrets Manager + External Secrets Operator | Runtime secret retrieval (no secrets in Git) |
+| **Ingress** | AWS ALB Controller + ACM | Centralized HTTPS routing and SSL termination |
+| **Monitoring** | Prometheus, Grafana, Alertmanager, Blackbox Exporter | Full observability with declarative alerting |
 
-![Architecture Diagram](https://your-image-hosting-service.com/architecture-diagram.png)
-<!-- TODO: Add the architecture diagram you created -->
+---
+## 🧩 System Design Philosophy
 
-1.  **Infrastructure as Code (IaC):**
-    *   **Terraform** is used to provision all AWS resources, including the VPC, EKS Cluster, and IAM Roles for Service Accounts (IRSA). This ensures the environment is reproducible, version-controlled, and can be torn down cleanly.
+### 1. Automated CI/CD
+- **Jenkins** drives the CI pipeline, triggered on every commit.  
+- A **multi‑stage Dockerfile** builds a lightweight, secure Node.js container.  
+- Jenkins updates the GitOps repository after pushing the new image tag, enabling **pull‑based Continuous Deployment** through Argo CD.
 
-2.  **Continuous Integration (CI):**
-    *   **Jenkins** automates the build and integration process.
-    *   When code is pushed to this repository, a `Jenkinsfile` pipeline is triggered.
-    *   The pipeline builds a new Docker image, tags it, and pushes it to a container registry (Docker Hub).
-    *   Crucially, the pipeline then checks out the separate **GitOps repository** and programmatically updates the image tag in the environment's Helm values file before pushing the change.
+### 2. GitOps with Argo CD
+Traditional push-based deployments grant external system credentials to clusters — increasing risk.  
+In contrast, GitOps provides:
+- **Single Source of Truth:** Cluster state is always driven by Git.
+- **Security:** Jenkins modifies Git, not kube-apiserver directly.
+- **App of Apps Pattern:** Argo CD manages itself, its dependencies, and all applications declaratively.
 
-3.  **Continuous Deployment (CD) with GitOps:**
-    *   **Argo CD** is the GitOps engine, acting as the single source of truth for the cluster's state.
-    *   It continuously monitors the **GitOps repository**.
-    *   When it detects the new image tag pushed by Jenkins, it automatically syncs the changes to the EKS cluster, performing a zero-downtime rolling update of the application.
+**Flow:**
 
-## ✨ Key Features & DevOps Showcase
+```
+Developer Push → Jenkins → GitOps Repo (image tag update) → Argo CD Sync → EKS Deploy
+```
+### 3. Terraform for IaC
+Terraform codifies provisioning of:
+- **VPC** (multi-AZ private + public subnets)  
+- **EKS Cluster** and worker nodegroups  
+- **IAM Roles for Service Accounts (IRSA)** for pod‑level authorization  
+- **S3 remote backend** for state locking  
 
-This project isn't just a simple deployment; it's a demonstration of a complete, production-ready platform.
+Everything is reproducible and versioned.
 
-### ☸️ Kubernetes & Containerization
-*   **Multi-Stage Dockerfile:** The application is containerized using an optimized, multi-stage build that produces a small and secure final image.
-*   **Non-Root User:** The container runs as a non-root user to adhere to the principle of least privilege.
-*   **GitOps with Argo CD:** Deploys all cluster components, including core services and the application itself, using the "App of Apps" pattern for centralized management.
-*   **Helm:** All application manifests are packaged as a flexible and configurable Helm chart.
+### 4. Advanced Networking
+- A **single, shared AWS Application Load Balancer (ALB)** handles routing for all HTTP/S workloads.
+- Implements **host‑based routing**, **SSL termination** via **AWS Certificate Manager (ACM)**, and **WAF** support for edge protection.
+- Using `target-type: ip`, the ALB connects **directly to pods**, bypassing `kube-proxy` for better performance and source IP preservation.
 
-### 🔒 Security
-*   **IRSA (IAM Roles for Service Accounts):** Pods are granted fine-grained AWS permissions without needing static credentials.
-*   **External Secrets Operator (ESO):** MongoDB credentials are securely fetched from **AWS Secrets Manager** at runtime. No secrets are ever stored in Git or the Docker image.
-*   **Network Security:** All public-facing traffic is routed through a single, shared **AWS Application Load Balancer (ALB)** with HTTPS enforced via **AWS Certificate Manager (ACM)**.
 
-### 📈 Observability (The O11y Stack)
-*   **Whitebox Monitoring:** The Node.js backend exposes a `/metrics` endpoint with custom metrics (using `prom-client`), which are scraped by **Prometheus** via a `ServiceMonitor`.
-*   **Blackbox Monitoring:** The **Blackbox Exporter** is configured to probe the live website URLs from an external perspective, measuring uptime, latency, and SSL certificate validity.
-*   **Visualization:** **Grafana** provides a single pane of glass with pre-built dashboards for cluster health and custom dashboards for application-specific and blackbox metrics.
-*   **Alerting:** **Alertmanager** is configured with `PrometheusRule` manifests to fire alerts on critical conditions, such as high application error rates.
+### 4. Secure Secrets Handling with ESO
+Secrets are **never committed to Git**.  
+- ESO retrieves credentials from **AWS Secrets Manager** dynamically.  
+- Permissions are scoped to the ESO ServiceAccount using IRSA.  
+- Secret rotation can occur transparently to running pods.
 
-## 🛠️ Application Details
+### 4. Observability Stack
 
-### Backend (Node.js / Express)
-*   Connects to a Mongo Atlas database for planet data.
-*   Serves a simple REST API.
-*   Exposes health check endpoints (`/live`, `/ready`) used by Kubernetes probes.
-*   Exposes a `/metrics` endpoint for Prometheus scraping.
+# 📈 Observability Examples
+![Grafana Dashboard](https://your-image-hosting-service.com/architecture-diagram.png)
 
-### Frontend (React)
-*   A simple single-page application that fetches and displays data from the backend.
-*   The build is served statically by the Express server.
+Prometheus & Grafana showing API latency and uptime metrics.
+
+### 📊 Comprehensive Whitebox Monitoring
+- The **Kube‑Prometheus‑Stack** (Prometheus, Alertmanager, Grafana, etc.) continuously scrapes:
+  - Cluster components (nodes, kubelet, API server, etcd)
+  - Custom MERN app metrics exposed via `/metrics` endpoint from `prom-client`
+- Provides “golden signals” — latency, error rate, throughput, and saturation.
+
+### 🌍 Complete Blackbox Monitoring
+- The **Blackbox Exporter** actively probes:
+  - Public URLs: `solarapp.sourabhbiswasdevops.cloud` and `dev.sourabhbiswasdevops.cloud`
+  - User‑facing performance (uptime, latency, SSL validity, DNS resolution time)
+- Offers real insights into *what end users experience*.
+
+### 🚨 Actionable Alerting
+- **PrometheusRule** manifests define alert triggers declaratively (CPU, memory, error rate thresholds).  
+- **Alertmanager** routes alerts to defined channels (Slack/email integrations possible) for immediate notification of critical conditions.
+
+### 📈 Powerful Visualization
+- **Grafana** runs with pre‑built dashboards for:
+  - Cluster components and workloads  
+  - Application metrics  
+  - Blackbox performance probes  
+- Also imports **popular community dashboards**, giving instant insights with no manual setup.
+
+### 💪 Resilient Application
+- The MERN app includes:
+  - **Liveness and Readiness Probes** for self‑healing and graceful rollouts.
+  - **Reactive, mobile‑friendly frontend** built with React.
+  - Optimized **Node.js backend**, instrumented for observability.
+- Delivers both developer ease and operational stability — the hallmark of a production‑ready service.
+
+---
+
+## ⚙️ CI/CD Workflow Detailed
+# 📈 CI Jenkins pipeline Examples
+![Jenkins pipeline](https://your-image-hosting-service.com/architecture-diagram.png)
+
+
+1. **Code Commit → Jenkins Trigger:**  
+   Jenkins pipeline (`Jenkinsfile`) runs on every change to the app repository.
+
+2. **Build & Push Image:**  
+   - Builds Docker image using a multi‑stage `Dockerfile`  
+   - Tags image with current Git commit hash  
+   - Pushes to **Docker Hub**
+
+3. **GitOps Repo Update:**  
+   - Jenkins checks out the **GitOps repo**  
+   - Updates Helm `values-dev.yaml` with new image tag  
+   - Commits and opens a Pull Request for review and promotion  
+   - Upon merge, **Argo CD** detects the change
+
+4. **Argo CD Sync:**  
+   - Automatically pulls new configuration from Git  
+   - Performs **zero‑downtime rolling updates** in EKS
+
+---
+
+## ☸️ Application Overview
+
+### Backend — Node.js / Express
+- REST API serving **planetary data** from **MongoDB Atlas**  
+- Health and readiness probes: `/live`, `/ready`  
+- `/metrics` endpoint exposes Prometheus-compatible values.
+
+### Frontend — React
+- Single Page Application for browsing solar system data  
+- Built with `create-react-app`, bundled and served by Express server.
+- Uses API proxy configuration to communicate with backend.
+
+---
+
+## 🧰 Prerequisites
+
+Ensure your environment satisfies the following requirements before deploying:
+
+### 🧑‍💻 Local Development
+| Dependency | Required Version | Installation Link |
+|:--|:--|:--|
+| **Node.js** | ≥ 18.x | [nodejs.org](https://nodejs.org) |
+| **npm** | ≥ 9.x | Included with Node |
+| **MongoDB** | Local or Atlas Cluster | [mongodb.com](https://www.mongodb.com) |
+| **Docker** | ≥ 24.x | [docker.com](https://www.docker.com) |
+| **Terraform** | ≥ 1.6.x | [terraform.io](https://developer.hashicorp.com/terraform) |
+| **kubectl** | Matching EKS version | [kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/) |
+| **AWS CLI** | v2.x configured | [aws.amazon.com/cli/](https://aws.amazon.com/cli/) |
+| **Helm** | ≥ 3.x | [helm.sh](https://helm.sh/docs/intro/install/) |
+| **Jenkins** | latest LTS | [jenkins.io](https://jenkins.io) |
+| **Argo CD CLI** (optional) | latest | [argo-cd.readthedocs.io](https://argo-cd.readthedocs.io) |
+
+### 🏗️ Cloud Requirements
+- AWS Account with permissions for VPC, EKS, IAM, and ALB.
+- EC2 t3a.large used in the worker nodes as a SPOT instance, **resulting 50% cost reduction**. 
+- Domain hosted in Hostinger, Cloudflare, and GoDaddy. DNS record edit permission. 
+- SSL via AWS Certificate Manager (ACM)  
+- S3 bucket for Terraform remote backend storage  
+
+---
 
 ## 🏃‍♂️ Running This Project Locally
 
@@ -99,7 +211,140 @@ While this project is designed for a full cloud deployment, you can run the appl
     # Start the server (runs on http://localhost:3000)
     npm start
     ```
+    
+# 🗃️ Repository Structure
 
-## 📜 License
+```
+PROJECT_ROOT
+├── images
+├── terraform
+│   ├── EKS-cluster-tf
+│   │   ├── create-backendS3
+│   │   │   └── backend.tf
+│   │   ├── bootstrap-argocd.yaml
+│   │   ├── main.tf
+│   │   ├── output.tf
+│   │   ├── provider.tf
+│   │   ├── terraform.tfvars
+│   │   └── variable.tf
+│   └── jenkin-ansible-server-tf
+├── .dockerignore
+├── .gitignore
+├── .groovylintrc.json
+├── Dockerfile
+├── Jenkinsfile
+├── LICENSE
+├── README.md
+├── app-controller.js
+├── app-test.js
+├── app.js
+├── index.html
+├── oas.json
+├── package-lock.json
+├── package.json
+└── style.css
+```
+
+
+
+## 🧩 Common Challenges & Lessons Learned
+
+Every production‑grade system encounters turbulence during its creation — that’s where the deep learning happens.  
+Here are the key problems faced during this project and how they were systematically solved.
+
+### 🔁 Dependency Cycles in Kubernetes
+**Problem:**  
+Certain components in the "App of Apps" setup depended on namespaces, CRDs, or controllers that weren’t created yet — leading to cyclic dependencies during Argo CD syncs.
+
+**Resolution:**  
+- Introduced **sync waves** in Argo CD (`argocd.argoproj.io/sync-wave` annotation).  
+- Ensured foundational components (CRDs, operators) deploy before dependent apps.  
+- Split large manifests into layered Helm charts — *infrastructure → base services → applications*.
+
+---
+
+### 🚧 503 Errors (Service Unavailable)
+**Problem:**  
+Intermittent 503 responses appeared on the ALB Ingress, especially after deployments or scaling events.
+
+**Diagnosis:**  
+- ALB health checks were failing during rolling updates.  
+- Backend pods could receive traffic before readiness probes passed.  
+
+**Resolution:**  
+- Tuned **readiness probes** and **deployment update strategies** for graceful pod rollout.  
+- Increased ALB health check grace period and enforced stable DNS propagation.  
+- Ensured the target type was `ip` and `externalTrafficPolicy = Local` for direct, consistent routing.
+
+---
+
+### ❗ ProvisioningFailed Errors (Terraform & AWS Resources)
+**Problem:**  
+Terraform occasionally threw `ProvisioningFailed` or IAM‑related errors when spinning up EKS or ALB roles.
+
+**Root Causes:**
+- IAM trust policies were missing or mismatched between service accounts and their IRSA roles.  
+- EKS nodegroups didn’t complete bootstrap before dependent Helm releases deployed.
+
+**Resolution:**  
+- Modularized Terraform structure with explicit **`depends_on` relationships**.  
+- Added retry logic for EKS modules via `local-exec` provisioners.  
+- Validated IAM policies using `terraform plan` in CI to prevent blind applies.
+
+---
+
+### 🔄 Argo CD Sync Issues
+**Problem:**  
+Apps stuck in “OutOfSync” or “Progressing” state, even though manifests looked correct.
+
+**Diagnosis & Fix:**
+- Cluster had CRDs missing (sync applied child apps before CRD provider).  
+- Applied **synchronization waves**, **automated pruning**, and **self‑healing policies** in `Application` manifests.  
+- Enabled “soft sync” retry hooks to auto‑recover without user intervention.
+
+---
+
+### 🧩 Helm Templating Errors
+**Problem:**  
+Templating inconsistencies across environments caused Helm to fail during sync (`nil pointer evaluating ...`).
+
+**Resolution:**  
+- Used `required` and `default` functions in Helm templates to ensure missing values didn’t break rendering.  
+- Adopted `<env>.values.yaml` overrides — keeping `values-dev.yaml` and `values-prod.yaml` separate but minimal.  
+- Added linting via `helm lint` in Jenkins CI before making GitOps commits.
+
+---
+
+### 📈 Complex Prometheus Configuration
+**Problem:**  
+Initial Prometheus setup failed to scrape custom `/metrics` from the MERN backend.
+
+**Cause:**  
+- Incorrect service selector labels in `ServiceMonitor`.  
+- Missing service annotations for discovery.  
+- Misaligned `prometheus.io/port` labels between app and scrape configuration.
+
+**Resolution:**  
+- Standardized labels across services (`app: solar-system-backend`).  
+- Verified discovery using `kubectl port-forward` testing of targets.  
+- Tuned retention policies, storage requests, and integrated alerting rules version‑controlled as CRDs.
+
+---
+
+### 💡 Key Takeaways
+- **Automation needs orchestration:** Order of resource deployment matters as much as the definitions themselves.  
+- **Visibility beats guesswork:** Prometheus and Grafana solved five root causes faster than any log tail.  
+- **Git truly is the operating manual:** Once the GitOps repo stabilized, rollback and recovery became trivial.  
+- **Errors ≠ Failure:** Each 503, failed sync, or Helm hiccup hardened the system’s reliability and your own DevOps reflexes.
+
+The end result: a **resilient, observable, self‑correcting platform** that can sustain real‑world production demands.
+
+# 🧑‍🚀 Author
+Sourabh Biswas
+**Cloud & DevOps Engineer**
+
+[• LinkedIn](https://www.linkedin.com/in/sourabhbiswasdevops/)
+
+Building scalable, secure, observable cloud platforms — one Solar System at a time. ☀️🚀
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
