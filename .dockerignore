@@ -1,30 +1,56 @@
-# ---------------------------------------------------------------------------------*
-# This will prevent your local modules and debug logs from being copied onto your 
-# Docker image and possibly overwriting modules installed within your image.
-# ---------------------------------------------------------------------------------*
+# .dockerignore (Corrected Version)
+
+#----------------------------------------
+# Dependencies and Logs
+#----------------------------------------
+# Ignore local node modules, as they will be installed inside the container
 node_modules
-npm-debug.log
-# ignore .git and .cache folders
+# Ignore npm debug logs
+npm-debug.log*
+
+
+#----------------------------------------
+# VCS, Environment, and Cache
+#----------------------------------------
+# Ignore the entire Git repository history
 .git
+# Ignore local cache directories
 .cache
+# CRITICAL: Never include environment files with secrets in the image
 .env
-# ignore all markdown files (md) beside all README*.md other than README-secret.md
+
+
+#----------------------------------------
+# Documentation Files
+#----------------------------------------
+# Ignore all markdown files...
 *.md
+# ...but make an exception for README files...
 !README*.md
+# ...and then re-ignore a specific secret README.
 README-secret.md
-# github related files
+
+
+#----------------------------------------
+# CI/CD, Infrastructure, and Tooling
+#----------------------------------------
+# Ignore GitHub Actions workflows
 .github/
-# nodejs releated files
-node_modules
-images
-solar-system.png
+# Ignore Terraform infrastructure code
+terraform
+# Ignore Jenkins files
+jenkins*
+
+
+#----------------------------------------
+# Testing, Coverage, and Security Reports
+#----------------------------------------
 .nyc_output
 .talismanrc
 coverage
 test-results.xml
-#reports
+# Generic report folders/files
 reports*
 zap*
 dependency*
-jenkins*
 trivy-image*
