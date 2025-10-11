@@ -30,7 +30,7 @@ pipeline {
     }
     post {
         always {
-            echo 'This will always run after the stages.'
+            echo 'This will always run, after the stages.'
         }
         success {
             echo 'This will run only if the pipeline succeeds.'
