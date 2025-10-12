@@ -59,7 +59,9 @@ Terraform codifies provisioning of:
 - **VPC** (multi-AZ private + public subnets)  
 - **EKS Cluster** and worker nodegroups  
 - **IAM Roles for Service Accounts (IRSA)** for pod‑level authorization  
-- **S3 remote backend** for state locking  
+- **S3 remote backend** for state locking
+- **EBI CSI driver** allows the driver to manage EBS volumes securely on AWS
+- **Storage Class** creates a gp3 storage class for cost‑optimized persistent storage layer, high‑throughput and high IOPS, as compared to EKS classic use of gp2 EBS volume.
 
 Everything is reproducible and versioned.
 
@@ -338,6 +340,69 @@ Initial Prometheus setup failed to scrape custom `/metrics` from the MERN backen
 - **Errors ≠ Failure:** Each 503, failed sync, or Helm hiccup hardened the system’s reliability and your own DevOps reflexes.
 
 The end result: a **resilient, observable, self‑correcting platform** that can sustain real‑world production demands.
+
+---
+## Backup and Recovery
+
+### EBS Snapshots
+
+- **Create Snapshot**:
+
+  ```bash
+  aws ec2 create-snapshot --volume-id vol-0bb1c79de4EXAMPLE --description " Prometheus-EBS"
+  ```
+
+- **Restore from Snapshot**:
+
+  ```bash
+  aws ec2 create-volume --snapshot-id snap-0bb1c79de4EXAMPLE --availability-zone ap-south1a
+  ```
+
+### Backup Strategies
+
+- **Use Velero for Backup and Restore**:
+  - **Install Velero**:
+
+    ```bash
+    velero install --provider aws --bucket <bucket-name> --secret-file <credentials-file> --backup-location-config region=<region>
+    ```
+
+- **Create a Backup**:
+
+  ```bash
+  velero backup create my-backup --include-namespaces solar-prod
+  ```
+
+---
+
+---
+
+## EKS Upgrades and Maintenance
+
+### Upgrading EKS Clusters
+
+- **Upgrade Control Plane**:
+  - **Using Console**: Select your cluster and choose to upgrade.
+  - **Using CLI**:
+
+    ```bash
+    aws eks update-cluster-version --name my-cluster --kubernetes-version 1.33
+    ```
+
+### Upgrading Node Groups
+
+- **Update Node Groups**:
+
+  ```bash
+  aws eks update-nodegroup-version --cluster-name my-cluster --nodegroup-name my-node-group --release-version 1.33
+  ```
+
+### Regular Maintenance
+
+- **Monitor Cluster Health**: Use Prometheus for monitoring and the Grafana Kubernetes dashboard for visualization. 
+- **Check for Vulnerabilities**: Regularly scan images and clusters for security vulnerabilities.
+
+---
 
 # 🧑‍🚀 Author
 Sourabh Biswas
