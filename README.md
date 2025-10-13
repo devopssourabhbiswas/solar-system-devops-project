@@ -17,7 +17,7 @@ The Kubernetes deployment configuration are managed in a separate [GitOps reposi
 
 This solution is designed around automation, security, scalability, and deep insight.
 
-![Solar System Architecture SCG](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/c5c0c7741d07908d0e6b7b09c1819b6fa0c5b09c/project-demo-screenshots/solar-project-Architecture.svg)
+![Solar System Architecture SCG](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/e77bc6de7b0bf2a7548355ae86873585085efc1f/project-demo-screenshots/solar-project-Architecture.svg)
 
 ## MERN STACK SOLAR-SYSTEM
 
