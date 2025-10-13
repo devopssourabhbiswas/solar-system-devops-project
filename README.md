@@ -16,14 +16,14 @@ The Kubernetes deployment configuration are managed in a separate [GitOps reposi
 ## 🧭 High-Level Architecture
 
 This solution is designed around automation, security, scalability, and deep insight.
-![Solar System Architecture](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/solar-project-Architecture.png)
 
 ![Solar System Architecture SCG](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/c5c0c7741d07908d0e6b7b09c1819b6fa0c5b09c/project-demo-screenshots/solar-project-Architecture.svg)
 
 ## MERN STACK SOLAR-SYSTEM
 
-![Solar System App Screenshot](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/solar-project-prodss.png) 
-<!-- TODO: Add a screenshot of your live application -->
+![Solar System App Screenshot](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/solar-project-prodss.png)
+
+![Solar System App Screenshot mobile](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/solar-project%20ss%20on%20mobile.png)
 
 ### 🧱 Core Components
 
@@ -58,6 +58,8 @@ In contrast, GitOps provides:
 ```
 Developer Push → Jenkins → GitOps Repo (image tag update) → Argo CD Sync → EKS Deploy
 ```
+![ARGOCD UI](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/argo%20solar-prod%20ss1.png)
+
 ### 3. Terraform for IaC
 Terraform codifies provisioning of:
 - **VPC** (multi-AZ private + public subnets)  
@@ -69,10 +71,18 @@ Terraform codifies provisioning of:
 
 Everything is reproducible and versioned.
 
+![Terraform IAC](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/vs%20code%20terraform%20ss.png)
+
+![EKS](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/aws%20eks%20ss2.png)
+
 ### 4. Advanced Networking
 - A **single, shared AWS Application Load Balancer (ALB)** handles routing for all HTTP/S workloads.
 - Implements **host‑based routing**, **SSL termination** via **AWS Certificate Manager (ACM)**, and **WAF** support for edge protection.
 - Using `target-type: ip`, the ALB connects **directly to pods**, bypassing `kube-proxy` for better performance and source IP preservation.
+
+![AWS ALB](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/aws%20alb%20ss.png)
+
+![CLOUDflare DNS](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/cloudflare%20dns%20ss.png)
 
 
 ### 4. Secure Secrets Handling with ESO
@@ -81,10 +91,12 @@ Secrets are **never committed to Git**.
 - Permissions are scoped to the ESO ServiceAccount using IRSA.  
 - Secret rotation can occur transparently to running pods.
 
+![AWS secrets](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/aws%20secerts%20mongo%20s.png)
+
 ### 4. Observability Stack
 
 # 📈 Observability Examples
-![Grafana Dashboard](https://your-image-hosting-service.com/architecture-diagram.png)
+![Grafana Dashboard](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/kubernetes%20grafana%20dashboard%20ss.png)
 
 Prometheus & Grafana showing API latency and uptime metrics.
 
@@ -94,15 +106,26 @@ Prometheus & Grafana showing API latency and uptime metrics.
   - Custom MERN app metrics exposed via `/metrics` endpoint from `prom-client`
 - Provides “golden signals” — latency, error rate, throughput, and saturation.
 
+![Grafana Pods Dashboard](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/kubernetes%20pods%20load%20grafana%20dashboard%20ss.png)
+
+
 ### 🌍 Complete Blackbox Monitoring
 - The **Blackbox Exporter** actively probes:
   - Public URLs: `solarapp.sourabhbiswasdevops.cloud` and `dev.sourabhbiswasdevops.cloud`
   - User‑facing performance (uptime, latency, SSL validity, DNS resolution time)
 - Offers real insights into *what end users experience*.
 
+![Grafana Blackbox Dashboard](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/blackbox%20export%20ss1.png)
+
+
 ### 🚨 Actionable Alerting
 - **PrometheusRule** manifests define alert triggers declaratively (CPU, memory, error rate thresholds).  
 - **Alertmanager** routes alerts to defined channels (Slack/email integrations possible) for immediate notification of critical conditions.
+
+![Alertmanager Dashboard](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/alertmanager%20ss.png)
+
+
+![Slack Dashboard](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/slack%20app%20down%20error.png)
 
 ### 📈 Powerful Visualization
 - **Grafana** runs with pre‑built dashboards for:
@@ -179,10 +202,15 @@ Ensure your environment satisfies the following requirements before deploying:
 
 ### 🏗️ Cloud Requirements
 - AWS Account with permissions for VPC, EKS, IAM, and ALB.
-- EC2 t3a.large used in the worker nodes as a SPOT instance, **resulting 50% cost reduction**. 
+- EC2 t3a.large used in the worker nodes as a SPOT instance, **resulting 50% cost reduction**.
+
+![Spot Dashboard](https://raw.githubusercontent.com/devopssourabhbiswas/solar-system-devops-project/refs/heads/main/project-demo-screenshots/aws%20spot%20price%20ss.png)
+
 - Domain hosted in Hostinger, Cloudflare, and GoDaddy. DNS record edit permission. 
 - SSL via AWS Certificate Manager (ACM)  
 - S3 bucket for Terraform remote backend storage  
+
+
 
 ---
 
@@ -253,7 +281,7 @@ PROJECT_ROOT
 
 
 
-## 🧩 Common Challenges & Lessons Learned
+## 🧩 Challenges & Lessons Learned
 
 Every production‑grade system encounters turbulence during its creation — that’s where the deep learning happens.  
 Here are the key problems faced during this project and how they were systematically solved.
