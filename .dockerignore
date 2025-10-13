@@ -7,6 +7,9 @@
 node_modules
 # Ignore npm debug logs
 npm-debug.log*
+solar-project-archieturerual-diagram.png
+README.md
+project-demo-screenshots
 
 
 #----------------------------------------
@@ -18,6 +21,7 @@ npm-debug.log*
 .cache
 # CRITICAL: Never include environment files with secrets in the image
 .env
+
 
 
 #----------------------------------------

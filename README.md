@@ -16,9 +16,10 @@ The Kubernetes deployment configuration are managed in a separate [GitOps reposi
 ## 🧭 High-Level Architecture
 
 This solution is designed around automation, security, scalability, and deep insight.
+[Solar System App Screenshot](https://github.com/devopssourabhbiswas/solar-system-devops-project/blob/main/project-demo-screenshots/solar-project-archieturerual-diagram.png)
 
 
-![Solar System App Screenshot](https://your-image-hosting-service.com/solar-system-screenshot.png) 
+![Solar System App Screenshot](https://github.com/devopssourabhbiswas/solar-system-devops-project/blob/main/project-demo-screenshots/solar-project-prodss.png) 
 <!-- TODO: Add a screenshot of your live application -->
 
 ### 🧱 Core Components
